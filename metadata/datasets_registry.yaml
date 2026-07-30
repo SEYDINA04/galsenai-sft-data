@@ -1,0 +1,4 @@
+# Registre des datasets (généré/complété par le lot 4 — metadata).
+# name, version, language, task, license, citation, source_url,
+# n_samples, splits, checksum, conversion_status
+datasets: {}

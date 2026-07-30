@@ -1,0 +1,23 @@
+# ───────────────────────────────────────────────────────────────
+#  settings.yaml — configuration de la plateforme.
+#  Toute valeur est surchargeable ici (aucun hardcode ailleurs).
+# ───────────────────────────────────────────────────────────────
+
+lid:
+  repo_id: cis-lmu/glotlid
+  filename: model_v3.bin      # épinglé v3 (jamais model.bin)
+  target_label: wol_Latn
+  threshold: 0.5
+
+quality:
+  min_chars: 1
+  max_chars: 50000
+  drop_duplicates: true
+
+hf:
+  repo: galsenai/wolof_sft
+  repo_type: dataset
+  token_env: HF_TOKEN
+
+# Chemins du corpus de pré-entraînement pour la décontamination (à renseigner) :
+pretraining_corpus_paths: []

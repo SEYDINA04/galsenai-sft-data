@@ -1,0 +1,10 @@
+# Licences des datasets sources (track recherche vs commercial).
+# Renseigner au fur et à mesure de l'ajout des converters.
+# statut: permissive | non-commercial | restricted | unverified
+
+licenses: {}
+# Exemple :
+# galsenai/french-wolof-translation:
+#   license: unverified
+#   statut: unverified
+#   commercial_ok: false
