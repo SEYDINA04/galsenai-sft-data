@@ -70,6 +70,41 @@ def convert(
 
 
 @app.command()
+def validate(
+    inp: Path = typer.Argument(..., help="JSONL de Samples à valider"),
+) -> None:
+    """Valide un JSONL de Samples (qualité + doublons) et affiche un rapport."""
+    from galsenai_sft.validators import validate_quality
+
+    report = validate_quality(read_samples_jsonl(inp))
+    console.print(report.summary())
+    if not report.ok:
+        console.print(f"[red]✗ {len(report.errors)} erreurs bloquantes[/red]")
+        raise typer.Exit(code=1)
+    console.print("[green]✓ aucune erreur bloquante[/green]")
+
+
+@app.command()
+def stats(
+    inp: Path = typer.Argument(..., help="JSONL de Samples"),
+) -> None:
+    """Affiche les statistiques d'un JSONL de Samples."""
+    from galsenai_sft.validators import compute_statistics
+
+    st = compute_statistics(read_samples_jsonl(inp))
+    table = Table("indicateur", "valeur", title="Statistiques")
+    table.add_row("total", f"{st.total:,}")
+    table.add_row("multi-tours", f"{st.multi_turn:,}")
+    table.add_row("avec tool_calls", f"{st.with_tool_calls:,}")
+    table.add_row("car. assistant moy.", f"{st.avg_assistant_chars}")
+    for task, n in st.by_task.items():
+        table.add_row(f"tâche · {task}", f"{n:,}")
+    for lang, n in st.by_prompt_lang.items():
+        table.add_row(f"consigne · {lang}", f"{n:,}")
+    console.print(table)
+
+
+@app.command()
 def export(
     inp: Path = typer.Argument(..., help="JSONL de Samples (sortie de 'convert')"),
     fmt: str = typer.Option("chatml", "--to", help="chatml | alpaca | sharegpt"),
