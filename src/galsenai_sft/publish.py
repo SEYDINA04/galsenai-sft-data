@@ -18,12 +18,29 @@ log = get_logger(__name__)
 
 
 def build_datacard(manifest: BuildManifest, repo: str) -> str:
-    """Génère la data card (README) du dataset SFT à partir du manifest."""
+    """Génère la data card (README) du dataset SFT à partir du manifest.
+
+    La licence annoncée est ``other`` : le dataset **agrège des sources aux
+    licences différentes** (permissives, non commerciales, non vérifiées).
+    Annoncer une licence unique serait faux — chaque source est listée avec la
+    sienne, et l'usage commercial est signalé explicitement.
+    """
+    from galsenai_sft.metadata import load_registry
+
+    registry = load_registry()
+    sources = [e for e in manifest.entries if e.n_samples]
+    non_commercial = [
+        e.dataset_id
+        for e in sources
+        if not (m := registry.get(e.dataset_id)) or not m.commercial_ok
+    ]
+
     lines = [
         "---",
         "language:",
         "- wo",
-        "license: cc-by-4.0",
+        "license: other",
+        "license_name: mixed-see-sources",
         "task_categories:",
         "- text-generation",
         "tags:",
@@ -43,33 +60,45 @@ def build_datacard(manifest: BuildManifest, repo: str) -> str:
         f"- **Exemples** : {manifest.total_samples:,}",
         f"- **Version** : {manifest.version}",
         f"- **Généré le** : {manifest.created_at}",
+    ]
+    if manifest.partial:
+        lines.append(f"- ⚠️ **Build partiel** : {manifest.stop_reason}")
+    lines += [
         "",
         "## Répartition par tâche",
         "",
-        "| tâche | exemples |",
-        "|---|---:|",
+        "| tâche | exemples | part |",
+        "|---|---:|---:|",
     ]
+    total = manifest.total_samples or 1
     for task, n in manifest.by_task.items():
-        lines.append(f"| {task} | {n:,} |")
+        lines.append(f"| {task} | {n:,} | {n / total:.1%} |")
     lines += [
         "",
-        "## Sources",
+        "## Sources et licences",
         "",
-        "| dataset | tâche | exemples |",
-        "|---|---|---:|",
+        "| dataset | tâche | exemples | licence | usage commercial |",
+        "|---|---|---:|---|:---:|",
     ]
-    for e in manifest.entries:
-        if e.n_samples:
-            lines.append(f"| `{e.dataset_id}` | {e.task} | {e.n_samples:,} |")
+    for e in sources:
+        meta = registry.get(e.dataset_id)
+        lic = f"{meta.license} ({meta.license_status.value})" if meta else "non vérifiée"
+        com = "✅" if meta and meta.commercial_ok else "⚠️"
+        lines.append(f"| `{e.dataset_id}` | {e.task} | {e.n_samples:,} | {lic} | {com} |")
     lines += [
+        "",
+        "> ⚠️ **Licences hétérogènes.** Ce dataset agrège des sources aux licences",
+        "> différentes ; il ne porte donc pas de licence unique. Les sources marquées",
+        "> ⚠️ ne sont **pas validées pour un usage commercial**"
+        + (f" ({len(non_commercial)} sur {len(sources)})." if sources else "."),
+        "> Pour un jeu strictement commercial, rebâtir en ne retenant que les",
+        "> sources permissives (voir le catalogue du dépôt).",
         "",
         "## Format",
         "",
         "Chaque exemple est une conversation ChatML : "
         '`{"messages": [{"role": "user", "content": ...}, '
         '{"role": "assistant", "content": ...}]}`.',
-        "",
-        "> Chaque source conserve sa licence d'origine — voir le catalogue du dépôt.",
         "",
     ]
     return "\n".join(lines)
@@ -99,7 +128,16 @@ def publish(
         return f"[dry-run] prêt à publier {manifest.total_samples} exemples vers {repo}"
 
     if not token:
-        raise RuntimeError("HF_TOKEN absent : publication refusée (garde-fou).")
+        # Repli sur le token de la session `huggingface-cli login` : le vrai
+        # garde-fou est le drapeau --execute, pas la variable d'environnement.
+        from huggingface_hub import get_token
+
+        token = get_token()
+    if not token:
+        raise RuntimeError(
+            "aucun token HF (ni HF_TOKEN, ni session `huggingface-cli login`) : "
+            "publication refusée (garde-fou)."
+        )
 
     from huggingface_hub import HfApi
 

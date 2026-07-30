@@ -41,6 +41,7 @@ Détails : `docs/architecture.md` et `docs/data_flow.md`.
 | 5 | Translators (interface + QE + review, moteur différé) | ✅ |
 | 6 | Builder end-to-end + publish HF (dry-run) | ✅ |
 | 7 | Documentation | ✅ |
+| 8 | Mémoire : build en flux, `MemoryGuard`, plafond cgroup, streaming HF | ✅ |
 
 Qualité : **68 tests**, ruff lint+format, CI GitHub Actions, hooks pre-commit.
 
@@ -48,13 +49,15 @@ Qualité : **68 tests**, ruff lint+format, CI GitHub Actions, hooks pre-commit.
 
 ## 4. Suite (post-lot 7) — à valider avec le chef
 
-### Phase A — Livraison v1 (rapide)
-- [ ] Renseigner `pretraining_corpus_paths` (décontamination anti-fuite).
-- [ ] `galsenai-sft build` complet (11 datasets) → dataset SFT ChatML.
-- [ ] Revue des stats (répartition tâches/langues, volumétrie).
-- [ ] `galsenai-sft publish --execute` → `galsenai/wolof_sft`
-      (décider privé/public + track commercial vs recherche).
-- [ ] Remettre ChatML + Alpaca + ShareGPT à l'équipe fine-tuning.
+### Phase A — Livraison v1
+- [x] **Lot 8 mémoire** : build en flux, garde-fou, plafond cgroup (`docs/memoire.md`).
+- [x] `make build` complet (11 datasets) → **905 362 exemples**, pic 2 Go, 0 échec.
+- [x] Revue des stats → déséquilibre identifié (71 % classification), assumé.
+- [x] `galsenai-sft publish --execute` → `galsenai/wolof_sft` (**privé**, v0.1.0).
+- [ ] Durcissement machine : `sudo apt install earlyoom` (à faire par le chef).
+- [ ] Remettre ChatML + Alpaca + ShareGPT à l'équipe fine-tuning (+ consigne de
+      pondération des tâches à l'entraînement).
+- [ ] Décider de la publication publique + du track (commercial vs recherche).
 
 ### Phase B — Étape 3 : traduction de datasets externes
 - [ ] Choisir le moteur (LLM frontière pivot FR recommandé) + budget/clé.

@@ -116,8 +116,9 @@ d'environ 415 k exemples, bien plus équilibré). **À trancher avant publicatio
 - **Traduction (étape 3) : moteur réel NON branché.** Interface + QE + review
   prêts ; `EchoTranslator` de test seulement. Raison : pas de clé API/budget
   décidé.
-- **Publication HF NON exécutée cette nuit** (dry-run). Créer un repo sous l'org
-  `galsenai` et pousser plusieurs Go méritent ta supervision.
+- **Publication HF** : exécutée le 30/07 en **privé** (`galsenai/wolof_sft`).
+  Data card : licence `other` + tableau des licences par source — annoncer une
+  licence unique aurait été faux (8 sources sur 11 non commerciales/non vérifiées).
 
 ---
 
@@ -132,21 +133,34 @@ d'environ 415 k exemples, bien plus équilibré). **À trancher avant publicatio
 
 ## 4. ⚠️ PROCHAINE ÉTAPE (à décider avec toi)
 
-1. **Rééquilibrer ou non le dataset** (cf. §2 bis) : `max_samples: 50000` sur
-   les corpus sentiments/émotions ? Sans cela, 71 % du SFT est de la
-   classification. **Décision requise avant publication.**
-2. **Publier sur HF** : `galsenai-sft publish --execute`. Décider :
-   - nom du repo (`galsenai/wolof_sft` par défaut) ;
-   - **privé ou public** ;
-   - track **commercial** (permissifs seulement) vs **recherche** (inclut
-     INJONGO, AfriQA…). Le catalogue distingue déjà les deux.
-3. **Étape 3 (traduction externe)** : choisir un moteur (LLM frontière pivot FR /
+**Décisions prises le 30/07 (soir)** :
+- ✅ **Pas de rééquilibrage** : le dataset part avec ses 905 362 exemples
+  (71 % classification). ⚠️ À signaler à l'équipe fine-tuning : **pondérer les
+  tâches à l'entraînement** ou sous-échantillonner à la volée, sinon le modèle
+  optimisera surtout la production d'étiquettes de sentiment. Le levier
+  `max_samples` reste disponible dans `configs/build.yaml` si vous changez d'avis.
+- ✅ **Publié en privé** : <https://huggingface.co/datasets/galsenai/wolof_sft>
+  (v0.1.0 · `data/train.jsonl` 550 Mo · data card avec licences par source).
+
+Reste à faire :
+
+1. **Durcissement machine (à faire par toi, demande `sudo`)** :
+   ```bash
+   sudo apt install earlyoom && sudo systemctl enable --now earlyoom
+   ```
+   `systemd-oomd` est actif mais ne surveille pas les processus lancés depuis un
+   terminal — c'est pourquoi rien n'a tué le build avant le gel du 30/07.
+2. **Livraison à l'équipe fine-tuning** (Marième, Sophie, Mohamed) : leur donner
+   accès au repo HF privé + les formats Alpaca/ShareGPT (`data/processed/`,
+   non publiés — 483 Mo et 513 Mo).
+3. **Publication publique** : décider quand, et sur quel track — **commercial**
+   (3 sources permissives seulement) vs **recherche** (les 11). 8 sources sur 11
+   sont en licence non vérifiée ou non commerciale.
+4. **Étape 3 (traduction externe)** : choisir un moteur (LLM frontière pivot FR /
    Google Translate / NLLB) + budget, puis brancher un backend `Translator`.
-4. **Décontamination** : renseigner `pretraining_corpus_paths` dans
-   `configs/settings.yaml` (chemin du parquet 1M du corpus) pour activer
-   l'anti-fuite au build.
-5. **Livraison à l'équipe fine-tuning** (Marième, Sophie, Mohamed) : format ChatML
-   (défaut) + Alpaca/ShareGPT générés en parallèle.
+5. **Décontamination** : renseigner `pretraining_corpus_paths` dans
+   `configs/settings.yaml` pour le futur jeu d'**évaluation** (jamais sur le jeu
+   d'entraînement : les sources y sont déjà).
 
 ---
 
