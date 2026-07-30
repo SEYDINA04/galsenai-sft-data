@@ -90,7 +90,7 @@ def validate(
     report = validate_quality(read_samples_jsonl(inp))
     console.print(report.summary())
     if not report.ok:
-        console.print(f"[red]✗ {len(report.errors)} erreurs bloquantes[/red]")
+        console.print(f"[red]✗ {report.n_errors} erreurs bloquantes[/red]")
         raise typer.Exit(code=1)
     console.print("[green]✓ aucune erreur bloquante[/green]")
 

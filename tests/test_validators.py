@@ -105,3 +105,19 @@ def test_statistics():
     assert stats.by_task["translation"] == 1
     assert stats.with_tool_calls == 1
     assert stats.by_source["test/ds"] == 1
+
+
+def test_rapport_borne_le_detail_mais_pas_les_compteurs():
+    """Mémoire bornée : compteurs exacts, détail limité (datasets massifs)."""
+    from galsenai_sft.validators.report import Issue, Severity, ValidationReport
+
+    rep = ValidationReport(max_issues=10)
+    for i in range(1000):
+        rep.add(Issue(code="duplicate", severity=Severity.ERROR, message="x", sample_index=i))
+
+    assert rep.n_errors == 1000  # compteur exact
+    assert len(rep.issues) == 10  # détail borné
+    assert rep.truncated is True
+    assert rep.counts_by_code()["duplicate"] == 1000
+    assert rep.ok is False
+    assert "1000 erreurs" in rep.summary()
