@@ -20,27 +20,18 @@ log = get_logger(__name__)
 def build_datacard(manifest: BuildManifest, repo: str) -> str:
     """Génère la data card (README) du dataset SFT à partir du manifest.
 
-    La licence annoncée est ``other`` : le dataset **agrège des sources aux
-    licences différentes** (permissives, non commerciales, non vérifiées).
-    Annoncer une licence unique serait faux — chaque source est listée avec la
-    sienne, et l'usage commercial est signalé explicitement.
+    Aucune licence n'est déclarée : le dataset **agrège des sources aux
+    licences différentes**, annoncer une licence unique serait faux. La carte
+    se contente de lister les sources et leur volume ; la vérification des
+    conditions d'usage de chaque source relève de l'utilisateur (le catalogue
+    du dépôt documente les licences connues).
     """
-    from galsenai_sft.metadata import load_registry
-
-    registry = load_registry()
     sources = [e for e in manifest.entries if e.n_samples]
-    non_commercial = [
-        e.dataset_id
-        for e in sources
-        if not (m := registry.get(e.dataset_id)) or not m.commercial_ok
-    ]
 
     lines = [
         "---",
         "language:",
         "- wo",
-        "license: other",
-        "license_name: mixed-see-sources",
         "task_categories:",
         "- text-generation",
         "tags:",
@@ -75,24 +66,14 @@ def build_datacard(manifest: BuildManifest, repo: str) -> str:
         lines.append(f"| {task} | {n:,} | {n / total:.1%} |")
     lines += [
         "",
-        "## Sources et licences",
+        "## Sources",
         "",
-        "| dataset | tâche | exemples | licence | usage commercial |",
-        "|---|---|---:|---|:---:|",
+        "| dataset | tâche | exemples |",
+        "|---|---|---:|",
     ]
     for e in sources:
-        meta = registry.get(e.dataset_id)
-        lic = f"{meta.license} ({meta.license_status.value})" if meta else "non vérifiée"
-        com = "✅" if meta and meta.commercial_ok else "⚠️"
-        lines.append(f"| `{e.dataset_id}` | {e.task} | {e.n_samples:,} | {lic} | {com} |")
+        lines.append(f"| `{e.dataset_id}` | {e.task} | {e.n_samples:,} |")
     lines += [
-        "",
-        "> ⚠️ **Licences hétérogènes.** Ce dataset agrège des sources aux licences",
-        "> différentes ; il ne porte donc pas de licence unique. Les sources marquées",
-        "> ⚠️ ne sont **pas validées pour un usage commercial**"
-        + (f" ({len(non_commercial)} sur {len(sources)})." if sources else "."),
-        "> Pour un jeu strictement commercial, rebâtir en ne retenant que les",
-        "> sources permissives (voir le catalogue du dépôt).",
         "",
         "## Format",
         "",
@@ -110,8 +91,12 @@ def publish(
     repo: str | None = None,
     private: bool = True,
     dry_run: bool = True,
+    card_only: bool = False,
 ) -> str:
     """Publie le dataset SFT sur HF. ``dry_run`` par défaut (n'envoie rien).
+
+    ``card_only`` n'envoie que la data card : utile quand seul le README change
+    et que les 550 Mo de ``train.jsonl`` sont déjà en ligne.
 
     Retourne l'URL du dataset (ou un message dry-run).
     """
@@ -150,13 +135,16 @@ def publish(
         repo_type="dataset",
         commit_message=f"SFT wolof v{manifest.version} — {manifest.total_samples} exemples",
     )
-    api.upload_file(
-        path_or_fileobj=str(chatml_file),
-        path_in_repo="data/train.jsonl",
-        repo_id=repo,
-        repo_type="dataset",
-        commit_message=f"SFT wolof v{manifest.version}",
-    )
+    if not card_only:
+        api.upload_file(
+            path_or_fileobj=str(chatml_file),
+            path_in_repo="data/train.jsonl",
+            repo_id=repo,
+            repo_type="dataset",
+            commit_message=f"SFT wolof v{manifest.version}",
+        )
+    else:
+        log.info("card-only : data/train.jsonl inchangé (non renvoyé)")
     url = f"https://huggingface.co/datasets/{repo}"
     log.info("publié -> %s", url)
     return url

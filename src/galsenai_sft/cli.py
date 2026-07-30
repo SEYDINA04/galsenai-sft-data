@@ -202,6 +202,9 @@ def publish(
     version: str = typer.Option("0.1.0", help="version publiée"),
     repo: str | None = typer.Option(None, help="repo HF cible (défaut: config)"),
     execute: bool = typer.Option(False, "--execute", help="publier réellement (sinon dry-run)"),
+    card_only: bool = typer.Option(
+        False, "--card-only", help="n'envoyer que la data card (README), pas le JSONL"
+    ),
 ) -> None:
     """Publie le dernier build sur HuggingFace (dry-run par défaut)."""
     import json
@@ -218,7 +221,9 @@ def publish(
     manifest = BuildManifest.model_validate(json.loads(manifest_path.read_text()))
     chatml_all = settings.paths.processed_chatml / "all.jsonl"
 
-    result = run_publish(manifest, chatml_all, repo=repo, dry_run=not execute)
+    result = run_publish(
+        manifest, chatml_all, repo=repo, dry_run=not execute, card_only=card_only
+    )
     console.print(result)
 
 
