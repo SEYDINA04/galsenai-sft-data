@@ -63,8 +63,33 @@ class GlotLIDv3:
         label, conf = self.predict(text)
         return label == self.config.target_label and conf >= self.config.threshold
 
+    def release(self) -> None:
+        """Libère le modèle (≈ 1,6 Go de RAM).
+
+        À appeler dès qu'un build n'a plus de dataset à filtrer : cette mémoire
+        représente l'essentiel de l'empreinte du processus.
+        """
+        if self._model is not None:
+            self._model = None
+            log.info("GlotLID libéré (~1,6 Go de RAM rendus)")
+
 
 @lru_cache(maxsize=1)
 def get_identifier() -> GlotLIDv3:
     """Instance partagée du LID par défaut (chargement paresseux)."""
     return GlotLIDv3()
+
+
+def release_identifier() -> None:
+    """Décharge le LID partagé et vide le cache (mémoire rendue au système)."""
+    import gc
+
+    from galsenai_sft.core.memory import process_rss_mb, trim_heap
+
+    before = process_rss_mb()
+    if get_identifier.cache_info().currsize:
+        get_identifier().release()
+    get_identifier.cache_clear()
+    gc.collect()
+    trim_heap()  # restitue réellement les pages au noyau (glibc)
+    log.info("RSS après libération du LID : %.0f Mo (avant %.0f Mo)", process_rss_mb(), before)

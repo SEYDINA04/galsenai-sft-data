@@ -73,8 +73,33 @@ def _iter_parquet_columns(
             yield from batch.to_pylist()
 
 
+def _project(ds: Any, columns: list[str] | None) -> Any:
+    """Restreint un dataset HF aux colonnes demandées, si l'API le permet.
+
+    Filet de sécurité quand la branche parquet n'est pas disponible : évite de
+    matérialiser les colonnes lourdes (audio/image) ligne par ligne.
+    """
+    if not columns:
+        return ds
+    select = getattr(ds, "select_columns", None)
+    names = getattr(ds, "column_names", None)
+    if select is None or not names:
+        return ds
+    present = [c for c in columns if c in names]
+    if not present or len(present) == len(names):
+        return ds
+    log.info("projection des colonnes : %s", ",".join(present))
+    return select(present)
+
+
 class HFLoader:
-    """Charge un dataset depuis le Hub HuggingFace (streaming possible).
+    """Charge un dataset depuis le Hub HuggingFace, **en streaming par défaut**.
+
+    Pourquoi le streaming par défaut : ``load_dataset`` classique télécharge le
+    dataset *entier* (cache Arrow) avant la première ligne — des dizaines de Go
+    pour les corpus audio, et une pression mémoire/disque inutile puisque le
+    pipeline ne lit chaque ligne qu'une fois. En streaming, la mémoire reste
+    bornée à un lot.
 
     Robustesse : si le dataset repose sur un **script de chargement** (désormais
     refusé par ``datasets``), on bascule automatiquement sur la branche
@@ -82,8 +107,9 @@ class HFLoader:
     spécifique à un dataset.
     """
 
-    def __init__(self, streaming: bool = False) -> None:
+    def __init__(self, streaming: bool = True, batch_size: int = 1000) -> None:
         self.streaming = streaming
+        self.batch_size = batch_size
 
     def load(
         self,
@@ -105,7 +131,7 @@ class HFLoader:
                     ",".join(columns),
                     len(urls),
                 )
-                return _iter_parquet_columns(urls, columns)
+                return _iter_parquet_columns(urls, columns, batch_size=self.batch_size)
             log.warning("%s : pas de parquet pour projection, chargement standard", dataset_id)
 
         try:
@@ -114,7 +140,7 @@ class HFLoader:
                 if config
                 else load_dataset(dataset_id, split=split, streaming=self.streaming)
             )
-            return ds
+            return _project(ds, columns)
         except (RuntimeError, ValueError) as e:
             msg = str(e).lower()
             if "script" not in msg and "no longer supported" not in msg:

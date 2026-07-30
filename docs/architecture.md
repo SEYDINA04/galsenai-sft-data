@@ -10,7 +10,7 @@ les décisions de conception.
 | **Modulaire** | Chaque responsabilité dans un sous-package (`core`, `converters`, `validators`, `translators`, `exporters`, `metadata`). |
 | **Extensible (Open/Closed)** | Ajouter un dataset = 1 converter décoré `@register`, **sans** modifier le pipeline. Idem pour un backend LID ou de traduction (Protocols). |
 | **Reproductible** | GlotLID **v3 épinglé** ; build **manifest** avec checksums SHA-256 ; seeds déterministes dans les converters. |
-| **Testable** | Loader et backends injectables → tests sans réseau ni GPU. 49 tests unitaires. |
+| **Testable** | Loader et backends injectables → tests sans réseau ni GPU. 68 tests unitaires. |
 | **Typé / validable** | Tout passe par des modèles **pydantic** (`Sample`, `DatasetMeta`, `BuildManifest`…). |
 | **Documenté** | Docstrings systématiques + `docs/` + catalogue auto-généré. |
 
@@ -85,6 +85,26 @@ use).
 - Logging structuré via **Rich** (`core.logging`), configuré une seule fois.
 - Les validators renvoient des `Issue` (erreur vs avertissement) plutôt que de
   lever — on peut valider tout un lot et rapporter, façon quality gates.
+
+## 5 bis. Mémoire : une contrainte d'architecture, pas un réglage
+
+Un build traite des centaines de milliers d'exemples sur un poste de 15 Go. La
+mémoire est donc un **invariant de conception** (détails et incident fondateur :
+[`memoire.md`](memoire.md)) :
+
+| Décision | Effet |
+|---|---|
+| Pipeline **générateur** de bout en bout (`iter_entry_samples` → `SampleSink.write`) | Rien n'est accumulé : RSS **constant ≈ 180 Mo** quel que soit le volume. |
+| **Checksums calculés à l'écriture** | Pas de seconde passe de lecture sur des fichiers multi-Go. |
+| **Statistiques incrémentales** (`StatisticsAccumulator`) | Agrégation en O(1) mémoire. |
+| **Streaming HF par défaut** + projection de colonnes parquet | Aucun téléchargement intégral ; colonnes audio jamais lues. |
+| **Libération du LID** après le dernier dataset filtré | 2 010 Mo → 215 Mo, mesuré. |
+| `MemoryGuard` (`core/memory.py`) | Arrêt **propre** sous pression : artefacts fermés, manifest `partial`. |
+| `scripts/build_guarded.sh` (cgroup `MemoryMax`, swap 0) | Plafond **dur** : le noyau tue le build, jamais la session. |
+
+Conséquence pour les contributeurs : **ne jamais matérialiser un flux de
+`Sample`** (`list(...)`) dans le chemin de build. `convert_entry()` reste
+disponible, mais réservé au debug et aux petits lots.
 
 ## 6. Reproductibilité & versioning
 

@@ -53,3 +53,18 @@ def test_wolof_target_filter_drops_noisy_before_lid():
     # bruit détecté sans même appeler le LID
     f = WolofTargetFilter(identifier=_FakeLID({}))
     assert f.keep(_sample("dormaiit !!!!")) is False
+
+
+def test_release_libere_le_modele_lid():
+    """Le LID (~1,6 Go) doit être libérable : c'est l'essentiel de l'empreinte."""
+    from galsenai_sft.validators.content_filter import WolofTargetFilter
+    from galsenai_sft.validators.lid import get_identifier
+
+    class FakeLID:
+        def predict(self, text):
+            return ("wol_Latn", 0.99)
+
+    f = WolofTargetFilter(identifier=FakeLID())
+    f.release()
+    assert f._identifier is None
+    assert get_identifier.cache_info().currsize == 0

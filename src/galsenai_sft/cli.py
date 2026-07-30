@@ -65,20 +65,18 @@ def convert(
     seed: int = typer.Option(42, help="seed déterministe"),
 ) -> None:
     """Ingère un dataset HF et écrit les Samples canoniques en JSONL."""
-    from datasets import load_dataset
+    from itertools import islice
+
+    from galsenai_sft.loaders import HFLoader
 
     cls = get_converter(dataset_id)
     conv = cls(seed=seed)
     log.info("Chargement %s (split=%s, config=%s)…", dataset_id, split, config)
-    ds = (
-        load_dataset(dataset_id, config, split=split)
-        if config
-        else load_dataset(dataset_id, split=split)
-    )
+    rows = HFLoader().load(dataset_id, split=split, config=config)  # streaming
     if limit:
-        ds = ds.select(range(min(limit, ds.num_rows)))
+        rows = islice(rows, limit)
 
-    n = write_samples_jsonl(conv.convert(iter(ds)), out)
+    n = write_samples_jsonl(conv.convert(iter(rows)), out)
     console.print(f"[green]✓[/green] {n:,} Samples écrits -> {out}")
 
 
@@ -122,22 +120,81 @@ def build(
     limit: int | None = typer.Option(None, help="limiter les lignes par dataset (debug/smoke)"),
     version: str = typer.Option("0.1.0", help="version du build"),
     decontaminate: bool = typer.Option(False, help="décontaminer vs corpus de pré-entraînement"),
+    streaming: bool = typer.Option(
+        True, help="lire les datasets en flux (défaut) au lieu de tout télécharger"
+    ),
+    min_available_mb: float | None = typer.Option(
+        None,
+        help="plancher de RAM système libre (Mo) sous lequel le build s'arrête proprement",
+    ),
+    max_rss_mb: float | None = typer.Option(
+        None, help="plafond de mémoire du processus de build (Mo)"
+    ),
 ) -> None:
-    """Construit le dataset SFT complet (charge, convertit, valide, exporte)."""
-    from galsenai_sft.build import build as run_build
+    """Construit le dataset SFT complet (charge, convertit, valide, exporte).
 
-    manifest = run_build(version=version, limit=limit, decontaminate_corpus=decontaminate)
+    Mémoire bornée : écriture au fil de l'eau + garde-fou. Pour un plafond
+    **dur** (cgroup), préférer ``make build`` / ``scripts/build_guarded.sh``.
+    """
+    from galsenai_sft.build import build as run_build
+    from galsenai_sft.core.config import get_settings
+    from galsenai_sft.core.memory import MemoryGuard
+    from galsenai_sft.loaders import HFLoader
+
+    settings = get_settings()
+    if min_available_mb is not None:
+        settings.memory.min_available_mb = min_available_mb
+    if max_rss_mb is not None:
+        settings.memory.max_rss_mb = max_rss_mb
+
+    manifest = run_build(
+        version=version,
+        limit=limit,
+        decontaminate_corpus=decontaminate,
+        settings=settings,
+        loader=HFLoader(streaming=streaming, batch_size=settings.build.batch_size),
+        guard=MemoryGuard.from_settings(settings.memory),
+    )
     table = Table(
         "tâche", "exemples", title=f"Build v{version} — {manifest.total_samples:,} exemples"
     )
     for task, n in manifest.by_task.items():
         table.add_row(task, f"{n:,}")
     console.print(table)
+    console.print(f"pic mémoire du build : [cyan]{manifest.peak_rss_mb:,.0f} Mo[/cyan]")
+    if manifest.partial:
+        console.print(f"[yellow]⚠ build PARTIEL — {manifest.stop_reason}[/yellow]")
     errors = [e for e in manifest.entries if e.error]
     if errors:
         console.print(f"[yellow]⚠ {len(errors)} datasets en échec :[/yellow]")
         for e in errors:
             console.print(f"  - {e.dataset_id} : {e.error}")
+    if manifest.partial:
+        raise typer.Exit(code=2)
+
+
+@app.command()
+def doctor() -> None:
+    """Vérifie les moyens mémoire avant un gros build (RAM, swap, cgroup)."""
+    from galsenai_sft.core.config import get_settings
+    from galsenai_sft.core.memory import available_mb, cgroup_limit_mb, process_rss_mb
+
+    settings = get_settings()
+    limit = cgroup_limit_mb()
+    table = Table("contrôle", "valeur", title="Diagnostic mémoire")
+    table.add_row("RAM disponible", f"{available_mb() / 1024:,.1f} Go")
+    table.add_row("RSS du processus", f"{process_rss_mb():,.0f} Mo")
+    table.add_row(
+        "plafond cgroup", f"{limit / 1024:,.1f} Go" if limit else "[yellow]aucun[/yellow]"
+    )
+    table.add_row("plancher du garde-fou", f"{settings.memory.min_available_mb:,.0f} Mo")
+    table.add_row("streaming HF", "oui" if settings.build.streaming else "[yellow]non[/yellow]")
+    console.print(table)
+    if not limit:
+        console.print(
+            "[yellow]⚠ pas de plafond cgroup : lance les gros builds via "
+            "[bold]make build[/bold] (isolation mémoire).[/yellow]"
+        )
 
 
 @app.command()

@@ -4,7 +4,19 @@ from __future__ import annotations
 
 import pytest
 
+from galsenai_sft.core.config import get_settings
 from galsenai_sft.core.schema import Message, Role, Sample, TaskType
+
+
+@pytest.fixture(autouse=True)
+def _garde_fou_neutre():
+    """Neutralise le plancher mémoire : les tests ne doivent pas dépendre de la
+    RAM libre de la machine d'exécution (le garde-fou a ses propres tests)."""
+    settings = get_settings()
+    previous = settings.memory.min_available_mb
+    settings.memory.min_available_mb = 0
+    yield
+    settings.memory.min_available_mb = previous
 
 
 @pytest.fixture

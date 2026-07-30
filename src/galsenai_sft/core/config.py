@@ -53,11 +53,36 @@ class HFConfig(BaseModel):
     token_env: str = "HF_TOKEN"
 
 
+class MemoryConfig(BaseModel):
+    """Garde-fou mémoire du build (voir :mod:`galsenai_sft.core.memory`)."""
+
+    #: Plancher de mémoire système disponible (Mo). 0 = surveillance désactivée.
+    min_available_mb: float = 1536.0
+    #: Plafond de RSS du processus (Mo). None = pas de plafond propre.
+    max_rss_mb: float | None = None
+    #: Période d'échantillonnage du surveillant (s).
+    interval_s: float = 2.0
+
+
+class BuildConfig(BaseModel):
+    """Comportement du builder."""
+
+    #: Streaming HuggingFace : lit les datasets par morceaux au lieu de les
+    #: télécharger intégralement (indispensable sur les gros datasets).
+    streaming: bool = True
+    #: Taille des lots lus dans les parquets distants.
+    batch_size: int = 1000
+    #: Fréquence des lignes de progression (en exemples écrits).
+    log_every: int = 5000
+
+
 class Settings(BaseModel):
     paths: Paths = Field(default_factory=Paths)
     lid: LIDConfig = Field(default_factory=LIDConfig)
     quality: QualityConfig = Field(default_factory=QualityConfig)
     hf: HFConfig = Field(default_factory=HFConfig)
+    memory: MemoryConfig = Field(default_factory=MemoryConfig)
+    build: BuildConfig = Field(default_factory=BuildConfig)
     # Corpus de pré-entraînement pour la décontamination (chemins parquet/jsonl).
     pretraining_corpus_paths: list[Path] = Field(default_factory=list)
 

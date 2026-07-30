@@ -27,3 +27,6 @@ htmlcov/
 # Modèles LID téléchargés
 *.bin
 *.ftz
+
+# Journaux de build
+logs/

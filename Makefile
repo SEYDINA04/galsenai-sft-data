@@ -3,7 +3,7 @@
 # ════════════════════════════════════════════════════════════════
 .DEFAULT_GOAL := help
 
-.PHONY: help setup hooks lint format test converters clean
+.PHONY: help setup hooks lint format test converters clean build build-smoke doctor
 
 help:  ## Affiche cette aide
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -28,6 +28,15 @@ test:  ## Tests (pytest)
 
 converters:  ## Liste les converters disponibles
 	uv run galsenai-sft converters
+
+doctor:  ## Diagnostic mémoire avant un gros build
+	uv run galsenai-sft doctor
+
+build-smoke:  ## Build de test (100 lignes/dataset) sous plafond mémoire
+	MEM_MAX=4G scripts/build_guarded.sh --limit 100
+
+build:  ## Build complet SOUS PLAFOND MÉMOIRE (la machine ne peut pas geler)
+	scripts/build_guarded.sh
 
 clean:  ## Nettoie les caches
 	rm -rf .pytest_cache .ruff_cache **/__pycache__

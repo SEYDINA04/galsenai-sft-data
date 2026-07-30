@@ -61,3 +61,10 @@ class WolofTargetFilter:
             return False
         label, conf = self._lid().predict(assistant)
         return label == self.target_label and conf >= self.threshold
+
+    def release(self) -> None:
+        """Libère le modèle LID (~1,6 Go) : plus aucun dataset à filtrer."""
+        from galsenai_sft.validators.lid import release_identifier
+
+        self._identifier = None
+        release_identifier()

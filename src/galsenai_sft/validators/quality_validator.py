@@ -91,15 +91,22 @@ def validate_quality(
 
 
 def filter_quality(samples: Iterable[Sample], cfg: QualityConfig | None = None) -> Iterator[Sample]:
-    """Filtre un flux : retire vides/doublons (erreurs bloquantes), garde le reste."""
+    """Filtre un flux : retire vides/doublons (erreurs bloquantes), garde le reste.
+
+    L'index de déduplication ne conserve que **64 bits** d'empreinte par exemple
+    (au lieu des 64 caractères hexadécimaux) : ~4× moins de mémoire, soit
+    quelques Mo même sur des millions d'exemples. Risque de collision négligeable
+    (< 1e-7 sur 1 M d'exemples) et sans conséquence : un doublon supposé est
+    simplement écarté.
+    """
     cfg = cfg or get_settings().quality
-    seen: set[str] = set()
+    seen: set[int] = set()
     for s in samples:
         issues = check_sample(s, cfg)
         if any(i.severity is Severity.ERROR for i in issues):
             continue
         if cfg.drop_duplicates:
-            fp = sample_fingerprint(s)
+            fp = int(sample_fingerprint(s)[:16], 16)
             if fp in seen:
                 continue
             seen.add(fp)

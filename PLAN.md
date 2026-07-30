@@ -42,7 +42,7 @@ Détails : `docs/architecture.md` et `docs/data_flow.md`.
 | 6 | Builder end-to-end + publish HF (dry-run) | ✅ |
 | 7 | Documentation | ✅ |
 
-Qualité : **49 tests**, ruff lint+format, CI GitHub Actions, hooks pre-commit.
+Qualité : **68 tests**, ruff lint+format, CI GitHub Actions, hooks pre-commit.
 
 ---
 

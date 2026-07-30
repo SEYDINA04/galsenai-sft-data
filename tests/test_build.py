@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from pathlib import Path
 from typing import Any
 
 from galsenai_sft.build import build, convert_entry
@@ -123,3 +124,104 @@ def test_datacard_generation():
     assert "galsenai/wolof_sft" in card
     assert "Répartition par tâche" in card
     assert "translation" in card
+
+
+# ════════════════════════════════════════════════════════════════════
+#  Mémoire : le build doit rester paresseux et survivre à une coupure
+# ════════════════════════════════════════════════════════════════════
+class EndlessLoader:
+    """Sert 100 000 lignes : un pipeline non paresseux les matérialiserait toutes."""
+
+    def load(self, dataset_id, split="train", config=None, columns=None):
+        return ({"french": f"Bonjour {i}", "wolof": f"Salaamaalekum {i}"} for i in range(100_000))
+
+
+def test_pipeline_est_paresseux():
+    """Consommer 3 Samples ne doit lire que ~3 lignes source (flux, pas de liste)."""
+    from galsenai_sft.build import BuildEntryReport, iter_entry_samples
+
+    report = BuildEntryReport(
+        dataset_id="galsenai/french-wolof-translation", task="t", split="train"
+    )
+    stream = iter_entry_samples(
+        {"id": "galsenai/french-wolof-translation"}, EndlessLoader(), report
+    )
+    for _ in range(3):
+        next(stream)
+
+    assert report.n_samples == 3
+    assert report.n_raw <= 10, "le loader a été consommé en avance : pipeline non paresseux"
+
+
+def test_build_interrompu_par_la_memoire_reste_exploitable(tmp_path):
+    """Pression mémoire -> arrêt propre : fichiers fermés, manifest écrit, partial=True."""
+    from galsenai_sft.build import build
+    from galsenai_sft.core import config as cfg_mod
+    from galsenai_sft.core.memory import MemoryGuard
+
+    settings = cfg_mod.get_settings()
+    settings.paths.processed_chatml = tmp_path / "chatml"
+    settings.paths.processed_alpaca = tmp_path / "alpaca"
+    settings.paths.processed_sharegpt = tmp_path / "sharegpt"
+    settings.paths.interim = tmp_path / "interim"
+
+    guard = MemoryGuard(min_available_mb=1_000_000, interval_s=0.01)  # plancher inatteignable
+    manifest = build(
+        plan=[{"id": "galsenai/french-wolof-translation"}],
+        loader=FakeLoader(FAKE_DATA),
+        settings=settings,
+        version="partial",
+        guard=guard,
+    )
+
+    assert manifest.partial is True
+    assert manifest.stop_reason
+    assert (tmp_path / "chatml" / "all.jsonl").exists()  # fermé proprement
+    assert (tmp_path / "interim" / "build_manifest.json").exists()
+
+
+def test_manifest_trace_le_pic_memoire(tmp_path):
+    from galsenai_sft.build import build
+    from galsenai_sft.core import config as cfg_mod
+
+    settings = cfg_mod.get_settings()
+    settings.paths.processed_chatml = tmp_path / "chatml"
+    settings.paths.processed_alpaca = tmp_path / "alpaca"
+    settings.paths.processed_sharegpt = tmp_path / "sharegpt"
+    settings.paths.interim = tmp_path / "interim"
+
+    manifest = build(
+        plan=[{"id": "galsenai/french-wolof-translation"}],
+        loader=FakeLoader(FAKE_DATA),
+        settings=settings,
+        version="mem",
+    )
+    assert manifest.peak_rss_mb > 0
+    assert manifest.partial is False
+
+
+def test_checksums_identiques_au_fichier_ecrit(tmp_path):
+    """Le checksum calculé au vol doit égaler le sha256 du fichier final."""
+    from galsenai_sft.build import build
+    from galsenai_sft.core import config as cfg_mod
+    from galsenai_sft.core.io import sha256_file
+
+    settings = cfg_mod.get_settings()
+    settings.paths.processed_chatml = tmp_path / "chatml"
+    settings.paths.processed_alpaca = tmp_path / "alpaca"
+    settings.paths.processed_sharegpt = tmp_path / "sharegpt"
+    settings.paths.interim = tmp_path / "interim"
+
+    manifest = build(
+        plan=[{"id": "galsenai/french-wolof-translation"}],
+        loader=FakeLoader(FAKE_DATA),
+        settings=settings,
+        version="sum",
+    )
+    for rel, checksum in manifest.outputs.items():
+        path = Path(rel)
+        if not path.is_absolute():
+            from galsenai_sft.core.config import REPO_ROOT
+
+            path = REPO_ROOT / rel
+        assert sha256_file(path) == checksum, rel
