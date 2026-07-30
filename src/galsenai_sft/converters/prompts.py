@@ -43,3 +43,80 @@ TRANSLATION_TEMPLATES: dict[PromptLang, list[str]] = {
 def lang_name(prompt_lang: PromptLang, code: str) -> str:
     """Nom localisé d'une langue (code ISO court) dans la langue de consigne."""
     return LANG_NAMES[prompt_lang].get(code, code)
+
+
+# --- Intent classification : {text} = énoncé utilisateur -------------------
+INTENT_TEMPLATES: dict[PromptLang, list[str]] = {
+    PromptLang.WO: [
+        "Lan mooy jubluwaayu kàddu gii? {text}",
+        "Wan jubluwaay la kàddu gii wund? {text}",
+    ],
+    PromptLang.FR: [
+        "Quelle est l'intention de cet énoncé ? {text}",
+        "Classe l'intention de la phrase suivante : {text}",
+    ],
+}
+
+# --- Slot filling : extraire les entités/valeurs d'un énoncé ----------------
+SLOT_TEMPLATES: dict[PromptLang, list[str]] = {
+    PromptLang.WO: [
+        "Génne slots yi ci kàddu gii: {text}",
+    ],
+    PromptLang.FR: [
+        "Extrais les slots (entités) de cet énoncé : {text}",
+    ],
+}
+
+# --- NER : {text} = phrase -------------------------------------------------
+NER_TEMPLATES: dict[PromptLang, list[str]] = {
+    PromptLang.WO: [
+        "Génne tur yu am solo (PER, ORG, LOC…) ci mbind mii: {text}",
+        "Wone entités yi nekk ci kàddu gii: {text}",
+    ],
+    PromptLang.FR: [
+        "Extrais les entités nommées (PER, ORG, LOC…) du texte : {text}",
+        "Identifie les entités nommées de la phrase : {text}",
+    ],
+}
+
+# --- QA : {question} -------------------------------------------------------
+QA_TEMPLATES: dict[PromptLang, list[str]] = {
+    PromptLang.WO: [
+        "Tontul laaj bii: {question}",
+        "Jox tontu laaj bii: {question}",
+    ],
+    PromptLang.FR: [
+        "Réponds à la question : {question}",
+        "Donne la réponse à : {question}",
+    ],
+}
+
+# --- Classification thématique/sentiment : {text}, {task_desc}, {labels} ----
+CLASSIFY_TEMPLATES: dict[PromptLang, list[str]] = {
+    PromptLang.WO: [
+        "{task_desc} ci mbind mii: {text}",
+    ],
+    PromptLang.FR: [
+        "{task_desc} : {text}",
+    ],
+}
+
+# Descriptions de tâche de classification (par langue de consigne).
+CLASSIFY_TASKS: dict[str, dict[PromptLang, str]] = {
+    "sentiment": {
+        PromptLang.WO: "Wan xalaat la (baax / bon / digg-dóomu)?",
+        PromptLang.FR: "Quel est le sentiment (positif / négatif / neutre)",
+    },
+    "topic": {
+        PromptLang.WO: "Ci wan wàll la mbind mii bokk?",
+        PromptLang.FR: "Quel est le thème du texte",
+    },
+    "emotion": {
+        PromptLang.WO: "Wan yëg-yëg la kàddu gii wund?",
+        PromptLang.FR: "Quelle émotion exprime ce texte",
+    },
+    "intent": {
+        PromptLang.WO: "Lan mooy jubluwaayu kàddu gii?",
+        PromptLang.FR: "Quelle est l'intention de cet énoncé",
+    },
+}
