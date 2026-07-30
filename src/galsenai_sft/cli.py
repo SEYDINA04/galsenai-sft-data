@@ -43,6 +43,19 @@ def converters() -> None:
 
 
 @app.command()
+def catalog(
+    out: Path = typer.Option(
+        None, "--out", "-o", help="chemin de sortie (défaut: docs/dataset_catalog.md)"
+    ),
+) -> None:
+    """Génère le catalogue Markdown des datasets (métadonnées + licences)."""
+    from galsenai_sft.metadata import write_catalog
+
+    path = write_catalog(out_path=out)
+    console.print(f"[green]✓[/green] catalogue généré -> {path}")
+
+
+@app.command()
 def convert(
     dataset_id: str = typer.Argument(..., help="repo_id HF (doit avoir un converter)"),
     split: str = typer.Option("train", help="split HF à charger"),

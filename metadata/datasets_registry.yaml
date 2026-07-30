@@ -1,4 +1,89 @@
-# Registre des datasets (généré/complété par le lot 4 — metadata).
-# name, version, language, task, license, citation, source_url,
-# n_samples, splits, checksum, conversion_status
-datasets: {}
+# ═══════════════════════════════════════════════════════════════════
+#  Registre des datasets sources intégrés à la plateforme SFT.
+#  La *tâche* est prise du converter (le code fait foi) ; ce fichier
+#  fournit licence, URL, citation, notes. Statuts licence issus du
+#  survey SFT (docs/SFT_DATASETS_SURVEY du repo wolof_scraper).
+#  license_status: permissive | non-commercial | restricted | unverified
+# ═══════════════════════════════════════════════════════════════════
+datasets:
+  # --- Traduction ---
+  galsenai/french-wolof-translation:
+    source_url: https://huggingface.co/datasets/galsenai/french-wolof-translation
+    license: unverified
+    license_status: unverified
+    commercial_ok: false
+
+  bilalfaye/english-wolof-french-dataset:
+    source_url: https://huggingface.co/datasets/bilalfaye/english-wolof-french-dataset
+    license: unverified
+    license_status: unverified
+    commercial_ok: false
+
+  # --- Intent ---
+  masakhane/InjongoIntent:
+    source_url: https://huggingface.co/datasets/masakhane/InjongoIntent
+    license: CC-BY-4.0
+    license_status: permissive
+    commercial_ok: true
+    citation: "Yu et al., INJONGO, ACL 2025 (arXiv:2502.09814)"
+    notes: "Gold wolof localisé — dataset d'ancrage intent+slots."
+
+  karim155/WolBanking77:
+    source_url: https://huggingface.co/datasets/karim155/WolBanking77
+    license: unverified
+    license_status: unverified
+    commercial_ok: false
+    notes: "Adaptation Banking77 (77 intentions bancaires)."
+
+  # --- NER ---
+  mbaye930/WolofEntityLinking:
+    source_url: https://huggingface.co/datasets/mbaye930/WolofEntityLinking
+    license: unverified
+    license_status: unverified
+    commercial_ok: false
+    notes: "NER + entity linking (Wikidata), annoté manuellement."
+
+  # --- Classification ---
+  Davlan/sib200:
+    source_url: https://huggingface.co/datasets/Davlan/sib200
+    license: CC-BY-SA-4.0
+    license_status: permissive
+    commercial_ok: true
+    notes: "Classification thématique (SIB-200), dérivé de FLORES."
+
+  michsethowusu/wolof-sentiments-corpus:
+    source_url: https://huggingface.co/datasets/michsethowusu/wolof-sentiments-corpus
+    license: unverified
+    license_status: unverified
+    commercial_ok: false
+
+  michsethowusu/wolof-emotions-corpus:
+    source_url: https://huggingface.co/datasets/michsethowusu/wolof-emotions-corpus
+    license: unverified
+    license_status: unverified
+    commercial_ok: false
+
+  # --- QA ---
+  masakhane/afriqa:
+    source_url: https://huggingface.co/datasets/masakhane/afriqa
+    license: CC-BY-4.0
+    license_status: non-commercial
+    commercial_ok: false
+    citation: "Ogundepo et al., AfriQA, Findings EMNLP 2023"
+    notes: "Licence en conflit (paper CC-BY vs HF NC) — traité en NC par prudence."
+
+  # --- Instruction ---
+  m-a-d-i/wori-wolof-instructions:
+    source_url: https://huggingface.co/datasets/m-a-d-i/wori-wolof-instructions
+    license: CC-BY-4.0
+    license_status: permissive
+    commercial_ok: true
+    notes: "WORI — reverse instructions validées (bilingue wo/fr)."
+
+  # --- Tool use / code ---
+  michsethowusu/Code-170k-wolof:
+    source_url: https://huggingface.co/datasets/michsethowusu/Code-170k-wolof
+    license: unverified
+    license_status: unverified
+    commercial_ok: false
+    notes: "Conversations ShareGPT (assistant de code) — signal agentique."
