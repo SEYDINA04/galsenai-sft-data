@@ -1,0 +1,30 @@
+# ═══════════════════════════════════════════════════════════════════
+#  build.yaml — datasets à inclure dans un build du dataset SFT.
+#  Chaque entrée : dataset_id (doit avoir un converter) + split + config.
+#  Retirer/ajouter une ligne suffit à changer le périmètre du build.
+# ═══════════════════════════════════════════════════════════════════
+datasets:
+  # --- Traduction ---
+  - { id: galsenai/french-wolof-translation, split: train }
+  - { id: bilalfaye/english-wolof-french-dataset, split: train }
+
+  # --- Intent ---
+  - { id: masakhane/InjongoIntent, split: train, config: wol }
+  - { id: karim155/WolBanking77, split: train }
+
+  # --- NER ---
+  - { id: mbaye930/WolofEntityLinking, split: train }
+
+  # --- Classification ---
+  - { id: Davlan/sib200, split: train, config: wol_Latn }
+  - { id: michsethowusu/wolof-sentiments-corpus, split: train }
+  - { id: michsethowusu/wolof-emotions-corpus, split: train }
+
+  # --- QA ---
+  - { id: masakhane/afriqa, split: train, config: wol }
+
+  # --- Instruction ---
+  - { id: m-a-d-i/wori-wolof-instructions, split: train }
+
+  # --- Tool use / code ---
+  - { id: michsethowusu/Code-170k-wolof, split: train }

@@ -118,6 +118,54 @@ def stats(
 
 
 @app.command()
+def build(
+    limit: int | None = typer.Option(None, help="limiter les lignes par dataset (debug/smoke)"),
+    version: str = typer.Option("0.1.0", help="version du build"),
+    decontaminate: bool = typer.Option(False, help="décontaminer vs corpus de pré-entraînement"),
+) -> None:
+    """Construit le dataset SFT complet (charge, convertit, valide, exporte)."""
+    from galsenai_sft.build import build as run_build
+
+    manifest = run_build(version=version, limit=limit, decontaminate_corpus=decontaminate)
+    table = Table(
+        "tâche", "exemples", title=f"Build v{version} — {manifest.total_samples:,} exemples"
+    )
+    for task, n in manifest.by_task.items():
+        table.add_row(task, f"{n:,}")
+    console.print(table)
+    errors = [e for e in manifest.entries if e.error]
+    if errors:
+        console.print(f"[yellow]⚠ {len(errors)} datasets en échec :[/yellow]")
+        for e in errors:
+            console.print(f"  - {e.dataset_id} : {e.error}")
+
+
+@app.command()
+def publish(
+    version: str = typer.Option("0.1.0", help="version publiée"),
+    repo: str | None = typer.Option(None, help="repo HF cible (défaut: config)"),
+    execute: bool = typer.Option(False, "--execute", help="publier réellement (sinon dry-run)"),
+) -> None:
+    """Publie le dernier build sur HuggingFace (dry-run par défaut)."""
+    import json
+
+    from galsenai_sft.build import BuildManifest
+    from galsenai_sft.core.config import get_settings
+    from galsenai_sft.publish import publish as run_publish
+
+    settings = get_settings()
+    manifest_path = settings.paths.interim / "build_manifest.json"
+    if not manifest_path.exists():
+        console.print("[red]✗ aucun build — lance d'abord 'galsenai-sft build'[/red]")
+        raise typer.Exit(code=1)
+    manifest = BuildManifest.model_validate(json.loads(manifest_path.read_text()))
+    chatml_all = settings.paths.processed_chatml / "all.jsonl"
+
+    result = run_publish(manifest, chatml_all, repo=repo, dry_run=not execute)
+    console.print(result)
+
+
+@app.command()
 def export(
     inp: Path = typer.Argument(..., help="JSONL de Samples (sortie de 'convert')"),
     fmt: str = typer.Option("chatml", "--to", help="chatml | alpaca | sharegpt"),
