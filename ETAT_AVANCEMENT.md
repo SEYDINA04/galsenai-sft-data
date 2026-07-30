@@ -15,7 +15,7 @@ processus tué par l'OOM-killer, redémarrage forcé). Cause : le builder gardai
 **tous les exemples en RAM** (344 000 objets pydantic pour Code-170k) pendant que
 `datasets` téléchargeait les corpus en entier (cache HF : 14 Go).
 
-**Corrigé à trois niveaux** (détails : `docs/memoire.md`) :
+**Corrigé à trois niveaux** :
 
 1. build **100 % en flux** — écriture au fil de l'eau, statistiques
    incrémentales, checksums calculés à l'écriture, LID libéré après usage
@@ -125,7 +125,7 @@ d'environ 415 k exemples, bien plus équilibré). **À trancher avant publicatio
 ## 3 bis. Décisions prises (suite)
 
 - **Mémoire = contrainte d'architecture** : aucun flux de `Sample` ne doit être
-  matérialisé dans le chemin de build (`docs/memoire.md`).
+  matérialisé dans le chemin de build (`src/galsenai_sft/build.py`).
 - **Streaming HuggingFace par défaut** : plus aucun téléchargement intégral
   (le cache HF était monté à 14 Go).
 
@@ -188,7 +188,7 @@ build : `uv run galsenai-sft build` fonctionne aussi mais sans plafond cgroup.
 |---|---|
 | Schéma canonique | `src/galsenai_sft/core/schema.py` |
 | Ajouter un dataset | `docs/contribution_guide.md` |
-| **Mémoire (incident + protections)** | `docs/memoire.md` |
+| **Mémoire (protections)** | `docs/architecture.md` |
 | Garde-fou mémoire | `src/galsenai_sft/core/memory.py` |
 | Plan de build | `configs/build.yaml` |
 | Registre licences | `metadata/datasets_registry.yaml` |

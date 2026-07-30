@@ -89,8 +89,9 @@ use).
 ## 5 bis. Mémoire : une contrainte d'architecture, pas un réglage
 
 Un build traite des centaines de milliers d'exemples sur un poste de 15 Go. La
-mémoire est donc un **invariant de conception** (détails et incident fondateur :
-[`memoire.md`](memoire.md)) :
+mémoire est donc un **invariant de conception** (garde-fou :
+[`core/memory.py`](../src/galsenai_sft/core/memory.py), plafond dur :
+[`scripts/build_guarded.sh`](../scripts/build_guarded.sh)) :
 
 | Décision | Effet |
 |---|---|

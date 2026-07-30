@@ -50,7 +50,7 @@ Qualité : **68 tests**, ruff lint+format, CI GitHub Actions, hooks pre-commit.
 ## 4. Suite (post-lot 7) — à valider avec le chef
 
 ### Phase A — Livraison v1
-- [x] **Lot 8 mémoire** : build en flux, garde-fou, plafond cgroup (`docs/memoire.md`).
+- [x] **Lot 8 mémoire** : build en flux, garde-fou, plafond cgroup.
 - [x] `make build` complet (11 datasets) → **905 362 exemples**, pic 2 Go, 0 échec.
 - [x] Revue des stats → déséquilibre identifié (71 % classification), assumé.
 - [x] `galsenai-sft publish --execute` → `galsenai/wolof_sft` (**privé**, v0.1.0).

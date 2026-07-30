@@ -30,3 +30,6 @@ htmlcov/
 
 # Journaux de build
 logs/
+
+# Notes locales (post-mortem machine : hors périmètre du dépôt)
+docs/memoire.md

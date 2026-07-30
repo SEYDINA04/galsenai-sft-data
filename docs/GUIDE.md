@@ -116,7 +116,7 @@ make build-smoke   # essai rapide (100 lignes par dataset)
 make build         # build complet, protégé
 ```
 
-Explication complète : `docs/memoire.md`.
+Explication complète : `docs/architecture.md` (section mémoire).
 
 ---
 
