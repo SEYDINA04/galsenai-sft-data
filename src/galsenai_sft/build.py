@@ -49,6 +49,8 @@ class BuildEntryReport(BaseModel):
     config: str | None = None
     n_raw: int = 0
     n_samples: int = 0
+    n_filtered_lid: int = 0
+    n_decontaminated: int = 0
     error: str | None = None
 
 
@@ -73,8 +75,13 @@ def convert_entry(
     loader: Loader,
     decontam_index: set[str] | None = None,
     limit: int | None = None,
+    target_filter: Any | None = None,
 ) -> tuple[list[Sample], BuildEntryReport]:
-    """Charge + convertit + filtre un dataset. Retourne (samples, rapport)."""
+    """Charge + convertit + filtre un dataset. Retourne (samples, rapport).
+
+    Si l'entrée porte ``lid_filter: true`` et qu'un ``target_filter`` est fourni,
+    on ne garde que les Samples dont la cible wolof est propre (LID + heuristiques).
+    """
     dataset_id = entry["id"]
     split = entry.get("split", "train")
     config = entry.get("config")
@@ -98,10 +105,18 @@ def convert_entry(
 
         samples = list(filter_quality(conv.convert(_counted())))
 
+        # Filtre LID de la cible wolof (opt-in par dataset : datasets bruités)
+        if entry.get("lid_filter") and target_filter is not None:
+            before = len(samples)
+            samples = [s for s in samples if target_filter.keep(s)]
+            report.n_filtered_lid = before - len(samples)
+
         if decontam_index:
             from galsenai_sft.validators.decontamination import decontaminate
 
+            before = len(samples)
             samples = list(decontaminate(samples, decontam_index))
+            report.n_decontaminated = before - len(samples)
 
         report.n_raw = n_raw
         report.n_samples = len(samples)
@@ -132,12 +147,22 @@ def build(
 
         decontam_index = build_pretraining_index()
 
+    # Filtre LID de la cible wolof, instancié une fois si au moins un dataset
+    # du plan l'exige (le LID est coûteux à charger).
+    target_filter = None
+    if any(e.get("lid_filter") for e in plan):
+        from galsenai_sft.validators.content_filter import WolofTargetFilter
+
+        target_filter = WolofTargetFilter(threshold=settings.lid.threshold)
+
     all_samples: list[Sample] = []
     by_task_samples: dict[str, list[Sample]] = defaultdict(list)
     manifest = BuildManifest(version=version, created_at=datetime.now(UTC).isoformat())
 
     for entry in plan:
-        samples, rep = convert_entry(entry, loader, decontam_index, limit=limit)
+        samples, rep = convert_entry(
+            entry, loader, decontam_index, limit=limit, target_filter=target_filter
+        )
         manifest.entries.append(rep)
         for s in samples:
             all_samples.append(s)

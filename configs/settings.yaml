@@ -19,5 +19,9 @@ hf:
   repo_type: dataset
   token_env: HF_TOKEN
 
-# Chemins du corpus de pré-entraînement pour la décontamination (à renseigner) :
-pretraining_corpus_paths: []
+# Corpus de pré-entraînement pour la décontamination.
+# ⚠️ NE PAS activer sur le build d'ENTRAÎNEMENT : ces datasets sont déjà dans le
+# corpus de pré-entraînement -> la décontamination viderait le dataset.
+# À réserver au futur jeu d'ÉVALUATION (anti-fuite). Activation : --decontaminate.
+pretraining_corpus_paths:
+  - ../wolof_scraper/src/wolof_unified_corpus/data/train-00000-of-00001.parquet

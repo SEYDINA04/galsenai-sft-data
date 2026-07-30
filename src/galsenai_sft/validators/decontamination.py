@@ -50,11 +50,15 @@ def _iter_texts(path: Path) -> Iterator[str]:
 
 def build_pretraining_index(paths: Iterable[Path] | None = None) -> set[str]:
     """Construit l'ensemble des empreintes des textes de pré-entraînement."""
+    from galsenai_sft.core.config import REPO_ROOT
+
     if paths is None:
         paths = get_settings().pretraining_corpus_paths
     index: set[str] = set()
     for p in paths:
         p = Path(p)
+        if not p.is_absolute():
+            p = (REPO_ROOT / p).resolve()  # chemins relatifs = relatifs au repo
         if not p.exists():
             log.warning("corpus de pré-entraînement introuvable : %s", p)
             continue

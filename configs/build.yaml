@@ -24,7 +24,8 @@ datasets:
   - { id: masakhane/afriqa, split: train, config: wol }
 
   # --- Instruction ---
-  - { id: m-a-d-i/wori-wolof-instructions, split: train }
+  # lid_filter: WORI contient ~13% de cibles bruitées/non-wolof -> on filtre.
+  - { id: m-a-d-i/wori-wolof-instructions, split: train, lid_filter: true }
 
   # --- Tool use / code ---
   - { id: michsethowusu/Code-170k-wolof, split: train }
