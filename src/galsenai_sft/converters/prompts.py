@@ -94,7 +94,7 @@ QA_TEMPLATES: dict[PromptLang, list[str]] = {
 # --- Classification thématique/sentiment : {text}, {task_desc}, {labels} ----
 CLASSIFY_TEMPLATES: dict[PromptLang, list[str]] = {
     PromptLang.WO: [
-        "{task_desc} ci mbind mii: {text}",
+        "{task_desc} {text}",
     ],
     PromptLang.FR: [
         "{task_desc} : {text}",
