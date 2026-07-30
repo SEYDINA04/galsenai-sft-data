@@ -175,8 +175,14 @@ def iter_entry_samples(
     Générateur : aucune liste intermédiaire. ``report`` est mis à jour au fil de
     l'eau (compteurs, erreur éventuelle) — une panne réseau en milieu de dataset
     conserve donc les exemples déjà produits.
+
+    Deux plafonds distincts :
+      - ``limit`` (CLI ``--limit``) : lignes **source** lues, pour un smoke test ;
+      - ``max_samples`` (clé du plan de build) : exemples **produits**, pour
+        rééquilibrer un dataset surreprésenté.
     """
     dataset_id = entry["id"]
+    max_samples = entry.get("max_samples")
 
     try:
         conv = get_converter(dataset_id)()
@@ -206,6 +212,9 @@ def iter_entry_samples(
         for sample in stream:
             report.n_samples += 1
             yield sample
+            if max_samples and report.n_samples >= max_samples:
+                log.info("%s : plafond de %d exemples atteint", dataset_id, max_samples)
+                break
 
     except Exception as e:  # noqa: BLE001 — un dataset en échec ne casse pas le build
         report.error = f"{type(e).__name__}: {e}"
@@ -334,9 +343,11 @@ def build(
                     sink.write(sample)
                     stats.update(sample)
                     if stats.total % settings.build.log_every == 0:
+                        _, rss = guard.sample()  # RSS courant (le pic est dans le manifest)
                         log.info(
-                            "%s exemples écrits (RSS %.0f Mo)",
+                            "%s exemples écrits (RSS %.0f Mo, pic %.0f Mo)",
                             f"{stats.total:,}",
+                            rss,
                             guard.peak_rss_mb,
                         )
 

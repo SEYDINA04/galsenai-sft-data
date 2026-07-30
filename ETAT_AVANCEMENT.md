@@ -70,7 +70,42 @@ tool_use (Code-170k ShareGPT).
 
 ---
 
-## 3. Décisions prises (et pourquoi)
+## 2 bis. ✅ BUILD COMPLET RÉUSSI (30/07, 18:02 → 18:28)
+
+Premier build réel des 11 datasets, sous plafond mémoire de 6 Go :
+
+| Indicateur | Valeur |
+|---|---|
+| Exemples produits | **905 362** |
+| Durée | 26 min |
+| **Pic mémoire** | **2 050 Mo** (transitoire, dû au LID) — RSS de croisière ≈ 300 Mo |
+| Datasets en échec | **0** |
+| Sorties | `chatml/` 1,1 Go · `alpaca/` 483 Mo · `sharegpt/` 513 Mo |
+
+Répartition par tâche :
+
+| Tâche | Exemples | Part |
+|---|---:|---:|
+| classification | 640 964 | 70,8 % |
+| tool_use | 176 723 | 19,5 % |
+| translation | 64 832 | 7,2 % |
+| intent | 15 012 | 1,7 % |
+| instruction | 6 284 | 0,7 % |
+| ner | 1 045 | 0,1 % |
+| qa | 502 | 0,1 % |
+
+La machine est restée pleinement utilisable pendant toute la durée du build.
+
+⚠️ **Point à décider — déséquilibre.** Les corpus `wolof-sentiments-corpus` et
+`wolof-emotions-corpus` pèsent à eux seuls **71 %** du dataset. Contrôle qualité
+effectué sur 400 exemples de chacun : le texte est **bien du wolof** (GlotLID :
+95 %) et peu bruité (2,2 %) — le problème n'est donc pas la qualité mais la
+**proportion** : le modèle apprendrait surtout à produire des étiquettes courtes
+de sentiment. Levier prêt : clé `max_samples` par dataset dans
+`configs/build.yaml` (ex. `max_samples: 50000` sur ces deux entrées → dataset
+d'environ 415 k exemples, bien plus équilibré). **À trancher avant publication.**
+
+---
 
 - **Format canonique = ChatML typé** (pydantic `Sample`), pas de texte brut →
   validable, transformable. Exporters Alpaca/ShareGPT dédiés.
@@ -86,11 +121,20 @@ tool_use (Code-170k ShareGPT).
 
 ---
 
+## 3 bis. Décisions prises (suite)
+
+- **Mémoire = contrainte d'architecture** : aucun flux de `Sample` ne doit être
+  matérialisé dans le chemin de build (`docs/memoire.md`).
+- **Streaming HuggingFace par défaut** : plus aucun téléchargement intégral
+  (le cache HF était monté à 14 Go).
+
+---
+
 ## 4. ⚠️ PROCHAINE ÉTAPE (à décider avec toi)
 
-1. **Lancer le build réel complet** : `galsenai-sft build` télécharge les 11
-   datasets et produit le dataset SFT ChatML. ⚠️ Volumineux (Code-170k = 344k
-   lignes). À lancer quand tu valides. Option de test : `--limit 100`.
+1. **Rééquilibrer ou non le dataset** (cf. §2 bis) : `max_samples: 50000` sur
+   les corpus sentiments/émotions ? Sans cela, 71 % du SFT est de la
+   classification. **Décision requise avant publication.**
 2. **Publier sur HF** : `galsenai-sft publish --execute`. Décider :
    - nom du repo (`galsenai/wolof_sft` par défaut) ;
    - **privé ou public** ;

@@ -2,6 +2,12 @@
 #  build.yaml — datasets à inclure dans un build du dataset SFT.
 #  Chaque entrée : dataset_id (doit avoir un converter) + split + config.
 #  Retirer/ajouter une ligne suffit à changer le périmètre du build.
+#
+#  Clés optionnelles par entrée :
+#    columns:     projection parquet (ne lit que ces colonnes — évite l'audio)
+#    lid_filter:  filtre la cible wolof au LID (datasets bruités)
+#    max_samples: plafond d'exemples produits (rééquilibrage d'un dataset
+#                 surreprésenté ; sans plafond, le dataset entre en entier)
 # ═══════════════════════════════════════════════════════════════════
 datasets:
   # --- Traduction ---
@@ -17,6 +23,9 @@ datasets:
   - { id: mbaye930/WolofEntityLinking, split: train }
 
   # --- Classification ---
+  # ⚠️ Déséquilibre : sentiments + émotions = 640k exemples sur 905k (71 % du
+  # dataset). Décision en attente (cf. ETAT_AVANCEMENT §4) : ajouter
+  # `max_samples: 50000` sur ces deux entrées pour rééquilibrer le mélange.
   - { id: Davlan/sib200, split: train, config: wol_Latn }
   - { id: michsethowusu/wolof-sentiments-corpus, split: train }
   - { id: michsethowusu/wolof-emotions-corpus, split: train }

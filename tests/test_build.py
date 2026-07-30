@@ -225,3 +225,21 @@ def test_checksums_identiques_au_fichier_ecrit(tmp_path):
 
             path = REPO_ROOT / rel
         assert sha256_file(path) == checksum, rel
+
+
+def test_max_samples_plafonne_un_dataset_surrepresente():
+    """`max_samples` permet de rééquilibrer un dataset qui écrase les autres."""
+    from galsenai_sft.build import BuildEntryReport, iter_entry_samples
+
+    report = BuildEntryReport(
+        dataset_id="galsenai/french-wolof-translation", task="translation", split="train"
+    )
+    samples = list(
+        iter_entry_samples(
+            {"id": "galsenai/french-wolof-translation", "max_samples": 5},
+            EndlessLoader(),
+            report,
+        )
+    )
+    assert len(samples) == 5
+    assert report.n_samples == 5
