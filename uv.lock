@@ -607,7 +607,9 @@ name = "galsenai-sft-data"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "aiohttp" },
     { name = "datasets" },
+    { name = "fsspec" },
     { name = "huggingface-hub" },
     { name = "pyarrow" },
     { name = "pydantic" },
@@ -630,8 +632,10 @@ lid = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiohttp", specifier = ">=3.9" },
     { name = "datasets", specifier = ">=2.19" },
     { name = "fasttext-wheel", marker = "extra == 'lid'", specifier = ">=0.9.2" },
+    { name = "fsspec", specifier = ">=2024.0" },
     { name = "huggingface-hub", specifier = ">=0.23" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.7" },
     { name = "pyarrow", specifier = ">=15.0" },

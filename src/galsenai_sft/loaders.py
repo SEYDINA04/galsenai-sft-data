@@ -21,7 +21,11 @@ _PARQUET_API = "https://datasets-server.huggingface.co/parquet"
 @runtime_checkable
 class Loader(Protocol):
     def load(
-        self, dataset_id: str, split: str = "train", config: str | None = None
+        self,
+        dataset_id: str,
+        split: str = "train",
+        config: str | None = None,
+        columns: list[str] | None = None,
     ) -> Iterable[dict[str, Any]]:
         """Retourne un itérable de lignes brutes (dicts)."""
         ...
@@ -48,6 +52,27 @@ def _parquet_urls(dataset_id: str, split: str, config: str | None) -> list[str]:
     ]
 
 
+def _iter_parquet_columns(
+    urls: list[str], columns: list[str], batch_size: int = 2000
+) -> Iterable[dict[str, Any]]:
+    """Lit UNIQUEMENT ``columns`` depuis des parquets distants (lecture colonnaire).
+
+    Évite de télécharger les colonnes lourdes (audio/image) : sur un parquet, la
+    projection de colonnes ne récupère que les blocs des colonnes demandées.
+    """
+    import fsspec
+    import pyarrow.parquet as pq
+
+    fs = fsspec.filesystem("https")
+    for url in urls:
+        pf = pq.ParquetFile(fs.open(url))
+        present = [c for c in columns if c in pf.schema_arrow.names]
+        if not present:
+            continue
+        for batch in pf.iter_batches(batch_size=batch_size, columns=present):
+            yield from batch.to_pylist()
+
+
 class HFLoader:
     """Charge un dataset depuis le Hub HuggingFace (streaming possible).
 
@@ -61,9 +86,27 @@ class HFLoader:
         self.streaming = streaming
 
     def load(
-        self, dataset_id: str, split: str = "train", config: str | None = None
+        self,
+        dataset_id: str,
+        split: str = "train",
+        config: str | None = None,
+        columns: list[str] | None = None,
     ) -> Iterable[dict[str, Any]]:
         from datasets import load_dataset
+
+        # Projection de colonnes : lit seulement les colonnes texte via la branche
+        # parquet (évite de télécharger l'audio/image des datasets lourds).
+        if columns:
+            urls = _parquet_urls(dataset_id, split, config)
+            if urls:
+                log.info(
+                    "%s : lecture colonnaire (%s) sur %d parquet(s)",
+                    dataset_id,
+                    ",".join(columns),
+                    len(urls),
+                )
+                return _iter_parquet_columns(urls, columns)
+            log.warning("%s : pas de parquet pour projection, chargement standard", dataset_id)
 
         try:
             ds = (

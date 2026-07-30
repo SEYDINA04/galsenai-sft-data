@@ -6,7 +6,8 @@
 datasets:
   # --- Traduction ---
   - { id: galsenai/french-wolof-translation, split: train }
-  - { id: bilalfaye/english-wolof-french-dataset, split: train }
+  # bilalfaye embarque de l'audio (~5 Go) : on ne lit que les colonnes texte.
+  - { id: bilalfaye/english-wolof-french-dataset, split: train, columns: [en, wo, fr] }
 
   # --- Intent ---
   - { id: masakhane/InjongoIntent, split: train, config: wol }

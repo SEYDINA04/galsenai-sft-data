@@ -92,7 +92,7 @@ def convert_entry(
     )
 
     try:
-        rows = loader.load(dataset_id, split=split, config=config)
+        rows = loader.load(dataset_id, split=split, config=config, columns=entry.get("columns"))
         n_raw = 0
 
         def _counted():

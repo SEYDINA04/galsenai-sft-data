@@ -16,7 +16,11 @@ class FakeLoader:
         self.data = data
 
     def load(
-        self, dataset_id: str, split: str = "train", config: str | None = None
+        self,
+        dataset_id: str,
+        split: str = "train",
+        config: str | None = None,
+        columns: list[str] | None = None,
     ) -> Iterable[dict[str, Any]]:
         return list(self.data.get(dataset_id, []))
 
