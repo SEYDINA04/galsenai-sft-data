@@ -1,6 +1,6 @@
 """Statistiques d'un lot de Samples : volumétrie par tâche / source / langue de
-consigne, distribution de longueurs, part multi-tours. Sert au rapport de build
-et à la data card.
+consigne, longueurs moyennes, part multi-tours et appels d'outils. Sert au
+rapport de build et à la data card.
 
 Les statistiques sont **incrémentales** (:class:`StatisticsAccumulator`) : le
 build les met à jour sample par sample, sans jamais garder le lot en mémoire.
@@ -21,8 +21,13 @@ class Statistics(BaseModel):
     by_task: dict[str, int] = Field(default_factory=dict)
     by_source: dict[str, int] = Field(default_factory=dict)
     by_prompt_lang: dict[str, int] = Field(default_factory=dict)
+    #: Nombre d'**exemples** comportant plus d'un tour utilisateur.
     multi_turn: int = 0
+    #: Nombre d'**exemples** comportant au moins un appel d'outil.
+    #: (Compte des exemples, pas des messages : cohérent avec ``multi_turn``.)
     with_tool_calls: int = 0
+    #: Nombre total d'appels d'outil, tous exemples confondus.
+    total_tool_calls: int = 0
     total_user_chars: int = 0
     total_assistant_chars: int = 0
 
@@ -45,6 +50,7 @@ class StatisticsAccumulator:
         self.total = 0
         self.multi_turn = 0
         self.with_tool_calls = 0
+        self.total_tool_calls = 0
         self.user_chars = 0
         self.assistant_chars = 0
 
@@ -56,13 +62,16 @@ class StatisticsAccumulator:
         self._lang[sample.prompt_lang.value] += 1
         if sample.n_turns() > 1:
             self.multi_turn += 1
+        n_calls = 0
         for m in sample.messages:
-            if m.tool_calls:
-                self.with_tool_calls += 1
+            n_calls += len(m.tool_calls or [])
             if m.role is Role.USER:
                 self.user_chars += len(m.content)
             elif m.role is Role.ASSISTANT:
                 self.assistant_chars += len(m.content)
+        if n_calls:
+            self.with_tool_calls += 1
+            self.total_tool_calls += n_calls
 
     @property
     def by_task(self) -> dict[str, int]:
@@ -77,6 +86,7 @@ class StatisticsAccumulator:
             by_prompt_lang=dict(self._lang.most_common()),
             multi_turn=self.multi_turn,
             with_tool_calls=self.with_tool_calls,
+            total_tool_calls=self.total_tool_calls,
             total_user_chars=self.user_chars,
             total_assistant_chars=self.assistant_chars,
         )

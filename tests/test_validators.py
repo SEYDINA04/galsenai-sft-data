@@ -164,3 +164,52 @@ def test_dedup_reste_local_sans_index_partage():
     )
     assert len(list(filter_quality([s]))) == 1
     assert len(list(filter_quality([s]))) == 1
+
+
+# ════════════════════════════════════════════════════════════════════
+#  Statistiques : with_tool_calls compte des EXEMPLES, pas des messages
+# ════════════════════════════════════════════════════════════════════
+def test_with_tool_calls_compte_les_exemples_pas_les_messages():
+    """Bug v0.2 : un exemple à 3 appels comptait pour 3, gonflant la data card."""
+    from galsenai_sft.core.schema import Message, Role, Sample, TaskType, ToolCall
+    from galsenai_sft.validators.statistics import StatisticsAccumulator
+
+    acc = StatisticsAccumulator()
+    acc.update(
+        Sample(
+            messages=[
+                Message(role=Role.USER, content="fais deux choses"),
+                Message(
+                    role=Role.ASSISTANT,
+                    tool_calls=[ToolCall(name="a"), ToolCall(name="b")],
+                ),
+                Message(role=Role.TOOL, content="ok"),
+                Message(role=Role.ASSISTANT, tool_calls=[ToolCall(name="c")]),
+            ],
+            task=TaskType.TOOL_USE,
+            source="x",
+        )
+    )
+    st = acc.result()
+    assert st.total == 1
+    assert st.with_tool_calls == 1, "un exemple = 1, quel que soit le nombre d'appels"
+    assert st.total_tool_calls == 3, "le total des appels reste disponible à part"
+
+
+def test_exemple_sans_appel_n_est_pas_compte():
+    from galsenai_sft.core.schema import Message, Role, Sample, TaskType
+    from galsenai_sft.validators.statistics import StatisticsAccumulator
+
+    acc = StatisticsAccumulator()
+    acc.update(
+        Sample(
+            messages=[
+                Message(role=Role.USER, content="q"),
+                Message(role=Role.ASSISTANT, content="r"),
+            ],
+            task=TaskType.QA,
+            source="x",
+        )
+    )
+    st = acc.result()
+    assert st.with_tool_calls == 0 and st.total_tool_calls == 0

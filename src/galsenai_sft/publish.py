@@ -175,7 +175,8 @@ def _stats_section(stats: dict, total: int) -> list[str]:
         f"| longueur moyenne d'une consigne | {user_chars // total:,} car. |",
         f"| longueur moyenne d'une réponse | {asst_chars // total:,} car. |",
         f"| conversations multi-tours | {stats.get('multi_turn', 0):,} |",
-        f"| exemples avec `tool_calls` | {stats.get('with_tool_calls', 0):,} |",
+        f"| exemples avec appel d'outil | {stats.get('with_tool_calls', 0):,} |",
+        f"| appels d'outil au total | {stats.get('total_tool_calls', 0):,} |",
     ]
     return lines
 

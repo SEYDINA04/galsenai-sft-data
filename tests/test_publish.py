@@ -20,6 +20,7 @@ STATS = {
     "by_prompt_lang": {"wo": 600, "fr": 400},
     "multi_turn": 0,
     "with_tool_calls": 0,
+    "total_tool_calls": 0,
     "total_user_chars": 150_000,
     "total_assistant_chars": 250_000,
 }

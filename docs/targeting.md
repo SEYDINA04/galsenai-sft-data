@@ -19,7 +19,7 @@ recherche de volume :
 | Famille | Tâches visées | État dans le dataset |
 |---|---|---|
 | **A — Data Extraction** | NER, intent, classification, QA | couvert, sauf retrieval |
-| **B — Tool Use** (agentique) | function calling, décision d'appel/abstention | **couvert depuis la v0.2** (184 541 exemples avec appels réels) |
+| **B — Tool Use** (agentique) | function calling, décision d'appel/abstention | **couvert depuis la v0.2** (89 638 exemples avec appels réels) |
 
 Hors périmètre v1 : QA général ouvert, mathématiques, benchmarks de code.
 

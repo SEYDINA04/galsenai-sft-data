@@ -41,7 +41,7 @@ testée et poussée sur GitHub. Elle fait les 3 objectifs du brief :
    réel volontairement différé).
 
 **Les 7 lots (0 → 7) sont terminés**, plus un **lot 8 « mémoire »** après
-l'incident du 30/07. 133 tests passent. Le build a été vérifié sur données
+l'incident du 30/07. 135 tests passent. Le build a été vérifié sur données
 réelles.
 
 ---
@@ -187,9 +187,15 @@ documentaire. **19 nouvelles sources** intégrées, 11 → **30 converters** :
 
 | Indicateur | v0.1 | v0.2 |
 |---|---:|---:|
-| Exemples avec `tool_calls` réels | **0** | **184 541** |
+| Exemples contenant un appel d'outil | **0** | **89 638** |
+| Appels d'outil au total | **0** | **229 185** |
 | Conversations multi-tours | **0** | **35 752** |
-| Messages `system` (outils déclarés) | **0** | présents |
+| Exemples avec un message `system` | **0** | **143 611** |
+
+> Un bug de comptage a été corrigé au passage : `with_tool_calls` additionnait
+> les **messages** portant un appel, pas les **exemples** — incohérent avec
+> `multi_turn` qui compte des exemples. La première carte publiée annonçait
+> donc 184 541 « exemples » pour 89 638 réels. Corrigé, testé, republié.
 
 La tâche `tool_use` de la v0.1 ne contenait aucun appel d'outil — c'était du
 questions/réponses de code. Elle en contient désormais de vrais, dans quatre
@@ -258,7 +264,7 @@ principales).
 ```bash
 cd galsenai-sft-data
 make setup                    # venv + install
-make test                     # 133 tests
+make test                     # 135 tests
 make doctor                   # état mémoire avant un gros build
 make build-smoke              # build de test (100 lignes/dataset, plafond 4 Go)
 make build                    # build complet SOUS PLAFOND MÉMOIRE  ← à utiliser
