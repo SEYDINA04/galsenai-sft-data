@@ -1,6 +1,28 @@
 {
-  "created_at": "2026-07-31T00:18:52.838294+00:00",
+  "created_at": "2026-07-31T02:05:28.994891+00:00",
   "sources": [
+    {
+      "dataset_id": "galsenai/centralized_wolof_french_translation_data",
+      "task": "translation",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 98345,
+      "n_all_splits": 98345,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "sudoping01/english-wolof-translation",
+      "task": "translation",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 84709,
+      "n_all_splits": 84709,
+      "reason": "",
+      "error": null
+    },
     {
       "dataset_id": "galsenai/french-wolof-translation",
       "task": "translation",
@@ -20,6 +42,105 @@
       "split": "train",
       "n_targeted": 14670,
       "n_all_splits": 14670,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "MaroneAI/Wolof-to-French_Translation-Dataset",
+      "task": "translation",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 30002,
+      "n_all_splits": 30002,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "MaroneAI/French-Wolof_Translation-Dataset",
+      "task": "translation",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 30002,
+      "n_all_splits": 30002,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "dofbi/jolof",
+      "task": "translation",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 12084,
+      "n_all_splits": 12084,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "Alwaly/french-wolof-translation-gs",
+      "task": "translation",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 10372,
+      "n_all_splits": 10372,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "galsenai/english-wolof-smol-translation",
+      "task": "translation",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 7405,
+      "n_all_splits": 7405,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "m-a-d-i/wori-wolof-instructions",
+      "task": "instruction",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 3724,
+      "n_all_splits": 3724,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "bilalfaye/wolof-sft",
+      "task": "instruction",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 61971,
+      "n_all_splits": 61971,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "ngia/alpaca-data-in-wolof",
+      "task": "instruction",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 47463,
+      "n_all_splits": 47463,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "CohereLabs/aya_collection_language_split",
+      "task": "instruction",
+      "status": "integrated",
+      "config": "wolof",
+      "split": "train",
+      "n_targeted": 3146,
+      "n_all_splits": 3699,
       "reason": "",
       "error": null
     },
@@ -46,6 +167,17 @@
       "error": null
     },
     {
+      "dataset_id": "masakhane/masakhaner2",
+      "task": "ner",
+      "status": "integrated",
+      "config": "wol",
+      "split": "train",
+      "n_targeted": 4593,
+      "n_all_splits": 6561,
+      "reason": "",
+      "error": null
+    },
+    {
       "dataset_id": "mbaye930/WolofEntityLinking",
       "task": "ner",
       "status": "integrated",
@@ -57,13 +189,46 @@
       "error": null
     },
     {
-      "dataset_id": "Davlan/sib200",
-      "task": "classification",
+      "dataset_id": "masakhane/afriqa",
+      "task": "qa",
+      "status": "integrated",
+      "config": "wol",
+      "split": "train",
+      "n_targeted": 503,
+      "n_all_splits": 1341,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "facebook/belebele",
+      "task": "qa",
       "status": "integrated",
       "config": "wol_Latn",
-      "split": "train",
-      "n_targeted": 701,
-      "n_all_splits": 1004,
+      "split": "test",
+      "n_targeted": 900,
+      "n_all_splits": 900,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "masakhane/afrimmlu",
+      "task": "qa",
+      "status": "integrated",
+      "config": "wol",
+      "split": "test",
+      "n_targeted": 500,
+      "n_all_splits": 608,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "masakhane/afrimgsm",
+      "task": "qa",
+      "status": "integrated",
+      "config": "wol",
+      "split": "test",
+      "n_targeted": 250,
+      "n_all_splits": 258,
       "reason": "",
       "error": null
     },
@@ -90,24 +255,24 @@
       "error": null
     },
     {
-      "dataset_id": "masakhane/afriqa",
-      "task": "qa",
+      "dataset_id": "Davlan/sib200",
+      "task": "classification",
       "status": "integrated",
-      "config": "wol",
+      "config": "wol_Latn",
       "split": "train",
-      "n_targeted": 503,
-      "n_all_splits": 1341,
+      "n_targeted": 701,
+      "n_all_splits": 1004,
       "reason": "",
       "error": null
     },
     {
-      "dataset_id": "m-a-d-i/wori-wolof-instructions",
-      "task": "instruction",
+      "dataset_id": "masakhane/afrixnli",
+      "task": "classification",
       "status": "integrated",
-      "config": null,
-      "split": "train",
-      "n_targeted": 3724,
-      "n_all_splits": 3724,
+      "config": "wol",
+      "split": "test",
+      "n_targeted": 600,
+      "n_all_splits": 1050,
       "reason": "",
       "error": null
     },
@@ -123,92 +288,103 @@
       "error": null
     },
     {
-      "dataset_id": "masakhane/masakhaner2",
-      "task": "ner",
-      "status": "excluded",
-      "config": "wol",
+      "dataset_id": "Agent-Ark/Toucan-1.5M",
+      "task": "tool_use",
+      "status": "integrated",
+      "config": "SFT",
       "split": "train",
-      "n_targeted": 4593,
-      "n_all_splits": 6561,
-      "reason": "Seul NER wolof gold annoté humainement, mais CC BY-NC : incompatible avec un jeu utilisable en commercial. Réservé à un futur track recherche.",
+      "n_targeted": 119287,
+      "n_all_splits": 119287,
+      "reason": "",
       "error": null
     },
     {
-      "dataset_id": "ngia/alpaca-data-in-wolof",
+      "dataset_id": "nvidia/When2Call",
+      "task": "tool_use",
+      "status": "integrated",
+      "config": "train_sft",
+      "split": "train",
+      "n_targeted": 15000,
+      "n_all_splits": 15000,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "Team-ACE/ToolACE",
+      "task": "tool_use",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 11300,
+      "n_all_splits": 11300,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "NousResearch/hermes-function-calling-v1",
+      "task": "tool_use",
+      "status": "integrated",
+      "config": "func_calling",
+      "split": "train",
+      "n_targeted": 1893,
+      "n_all_splits": 1893,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "vonewman/alpaca-dataset-wolof",
       "task": "instruction",
       "status": "excluded",
       "config": null,
       "split": "train",
       "n_targeted": 47463,
       "n_all_splits": 47463,
-      "reason": "Traduction automatique non auditée. Le ciblage impose de ne jamais utiliser de MT non vérifiée comme donnée gold ; à réintégrer seulement après audit LID + qualité (cf. le filtre appliqué à WORI).",
+      "reason": "Reconditionnement d'alpaca-data-in-wolof au format Alpaca (même compte exact : 47 463). Déjà couvert par la source d'origine, intégrée.",
       "error": null
     },
     {
-      "dataset_id": "Agent-Ark/Toucan-1.5M",
-      "task": "tool_use",
-      "status": "candidate",
-      "config": "SFT",
-      "split": "train",
-      "n_targeted": 119287,
-      "n_all_splits": 119287,
-      "reason": "P0. Apache-2.0, trajectoires multi-tours réellement exécutées (MCP). Choix par défaut pour introduire du vrai function calling.",
-      "error": null
-    },
-    {
-      "dataset_id": "NousResearch/hermes-function-calling-v1",
-      "task": "tool_use",
-      "status": "candidate",
-      "config": "func_calling",
-      "split": "train",
-      "n_targeted": 1893,
-      "n_all_splits": 1893,
-      "reason": "P0. Apache-2.0. Verrouille le format <tool_call> de l'écosystème.",
-      "error": null
-    },
-    {
-      "dataset_id": "nvidia/When2Call",
-      "task": "tool_use",
-      "status": "candidate",
-      "config": "train_sft",
-      "split": "train",
-      "n_targeted": 15000,
-      "n_all_splits": 15000,
-      "reason": "P1. Décision d'appel / abstention — indispensable à un petit modèle, qui sur-appelle les outils sans contre-exemples.",
-      "error": null
-    },
-    {
-      "dataset_id": "Team-ACE/ToolACE",
-      "task": "tool_use",
-      "status": "candidate",
+      "dataset_id": "vonewman/alpaca-sharegpt-wolof",
+      "task": "instruction",
+      "status": "excluded",
       "config": null,
       "split": "train",
-      "n_targeted": 11300,
-      "n_all_splits": 11300,
-      "reason": "P1. Apache-2.0, 26k+ API : diversité de schémas.",
+      "n_targeted": 47463,
+      "n_all_splits": 47463,
+      "reason": "Même contenu que ci-dessus, au format ShareGPT. Aucun apport de volume.",
       "error": null
     },
     {
-      "dataset_id": "Salesforce/xlam-function-calling-60k",
-      "task": "tool_use",
+      "dataset_id": "vonewman/wolof-instruction-dataset-alpaca",
+      "task": "instruction",
+      "status": "excluded",
+      "config": null,
+      "split": "train",
+      "n_targeted": 3,
+      "n_all_splits": 3,
+      "reason": "Dépôt quasi vide (parquet de 9 Ko) : volume négligeable.",
+      "error": null
+    },
+    {
+      "dataset_id": "masakhane/masakhaner",
+      "task": "ner",
+      "status": "candidate",
+      "config": "wol",
+      "split": "train",
+      "n_targeted": null,
+      "n_all_splits": null,
+      "reason": "MasakhaNER 1.0 (1 871 lignes wolof). Largement inclus dans MasakhaNER 2.0 désormais intégré ; l'écart résiduel ne justifie pas encore un converter. L'API taille ne répond pas (501) : le dataset repose sur un script.",
+      "error": "HTTPError: HTTP Error 501: Not Implemented"
+    },
+    {
+      "dataset_id": "masakhane/masakhaner-x",
+      "task": "ner",
       "status": "candidate",
       "config": null,
       "split": "train",
       "n_targeted": null,
       "n_all_splits": null,
-      "reason": "P0. CC BY 4.0 mais dépôt *gated* : l'API taille répond 404 tant que les conditions ne sont pas acceptées. Volume annoncé par la source : 60 000.",
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
-      "dataset_id": "Salesforce/APIGen-MT-5k",
-      "task": "tool_use",
-      "status": "excluded",
-      "config": null,
-      "split": "train",
-      "n_targeted": 5000,
-      "n_all_splits": 5000,
-      "reason": "CC BY-NC : exclu du jeu commercial, comme MasakhaNER 2.0.",
-      "error": null
+      "reason": "Agrégat MasakhaNER 1.0 + 2.0 en annotations de *spans* (format plus proche du SFT que le BIO). Recouvrement quasi total avec l'intégré.",
+      "error": "HTTPError: HTTP Error 501: Not Implemented"
     },
     {
       "dataset_id": "miracl/miracl",
@@ -218,43 +394,76 @@
       "split": "train",
       "n_targeted": null,
       "n_all_splits": null,
-      "reason": "P1. Apache-2.0. `TaskType.RETRIEVAL` existe dans le schéma mais aucun converter ne l'alimente : la capacité IR est à zéro aujourd'hui.",
+      "reason": "`TaskType.RETRIEVAL` existe dans le schéma mais aucun converter ne l'alimente : la capacité IR reste à zéro après la v0.2. L'API taille répond 501 (script de chargement) — passer par la branche parquet.",
       "error": "HTTPError: HTTP Error 501: Not Implemented"
+    },
+    {
+      "dataset_id": "Salesforce/xlam-function-calling-60k",
+      "task": "tool_use",
+      "status": "candidate",
+      "config": null,
+      "split": "train",
+      "n_targeted": null,
+      "n_all_splits": null,
+      "reason": "Dépôt *gated* : l'API taille répond 404 tant que les conditions ne sont pas acceptées. Volume annoncé par la source : 60 000 appels exécutés-vérifiés. À débloquer manuellement puis intégrer.",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "dataset_id": "Salesforce/APIGen-MT-5k",
+      "task": "tool_use",
+      "status": "candidate",
+      "config": null,
+      "split": "train",
+      "n_targeted": 5000,
+      "n_all_splits": 5000,
+      "reason": "5 000 trajectoires multi-tours de référence. Le format multi-tours est désormais supporté (Toucan) : intégrable sans nouveau travail de schéma.",
+      "error": null
+    },
+    {
+      "dataset_id": "AmazonScience/massive",
+      "task": "intent",
+      "status": "candidate",
+      "config": "fr-FR",
+      "split": "train",
+      "n_targeted": 11514,
+      "n_all_splits": 16521,
+      "reason": "Aucune variante wolof n'existe. Utilisable seulement par localisation (protocole INJONGO) — c'est un travail de production de données, pas d'intégration. L'intent plafonne à ~15 000 exemples sans cela.",
+      "error": null
     }
   ],
   "by_task": {
     "classification": {
       "task": "classification",
-      "n_sources": 3,
-      "n_integrated_rows": 641921,
+      "n_sources": 4,
+      "n_integrated_rows": 642521,
       "n_candidate_rows": 0,
       "n_excluded_rows": 0
     },
     "instruction": {
       "task": "instruction",
-      "n_sources": 2,
-      "n_integrated_rows": 3724,
+      "n_sources": 7,
+      "n_integrated_rows": 116304,
       "n_candidate_rows": 0,
-      "n_excluded_rows": 47463
+      "n_excluded_rows": 94929
     },
     "intent": {
       "task": "intent",
-      "n_sources": 2,
+      "n_sources": 3,
       "n_integrated_rows": 14072,
-      "n_candidate_rows": 0,
+      "n_candidate_rows": 11514,
       "n_excluded_rows": 0
     },
     "ner": {
       "task": "ner",
-      "n_sources": 2,
-      "n_integrated_rows": 1045,
+      "n_sources": 4,
+      "n_integrated_rows": 5638,
       "n_candidate_rows": 0,
-      "n_excluded_rows": 4593
+      "n_excluded_rows": 0
     },
     "qa": {
       "task": "qa",
-      "n_sources": 1,
-      "n_integrated_rows": 503,
+      "n_sources": 4,
+      "n_integrated_rows": 2153,
       "n_candidate_rows": 0,
       "n_excluded_rows": 0
     },
@@ -268,14 +477,14 @@
     "tool_use": {
       "task": "tool_use",
       "n_sources": 7,
-      "n_integrated_rows": 176999,
-      "n_candidate_rows": 147480,
-      "n_excluded_rows": 5000
+      "n_integrated_rows": 324479,
+      "n_candidate_rows": 5000,
+      "n_excluded_rows": 0
     },
     "translation": {
       "task": "translation",
-      "n_sources": 2,
-      "n_integrated_rows": 32447,
+      "n_sources": 9,
+      "n_integrated_rows": 305366,
       "n_candidate_rows": 0,
       "n_excluded_rows": 0
     }

@@ -43,7 +43,7 @@ Détails : `docs/architecture.md` et `docs/data_flow.md`.
 | 7 | Documentation | ✅ |
 | 8 | Mémoire : build en flux, `MemoryGuard`, plafond cgroup, streaming HF | ✅ |
 
-Qualité : **101 tests**, ruff lint+format, CI GitHub Actions, hooks pre-commit.
+Qualité : **133 tests**, ruff lint+format, CI GitHub Actions, hooks pre-commit.
 
 ---
 

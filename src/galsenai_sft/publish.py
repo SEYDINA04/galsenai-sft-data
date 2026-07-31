@@ -25,8 +25,9 @@ TASK_DOC: dict[str, str] = {
         "Réponse attendue = un label unique (en anglais)."
     ),
     "tool_use": (
-        "Question/réponse autour du code, au format conversationnel. "
-        "**Ne contient aucun appel d'outil réel** — voir les limites."
+        "Appel d'outils (*function calling*) : l'assistant décide d'appeler une "
+        "fonction, avec ses arguments, ou de répondre directement. Contient aussi "
+        "des questions/réponses de code en wolof."
     ),
     "translation": (
         "Traduction dans les deux sens entre le wolof et le français ou l'anglais. "
@@ -83,10 +84,14 @@ def build_datacard(manifest: BuildManifest, repo: str) -> str:
     stats = _load_stats()
     total = manifest.total_samples or 1
 
+    # Les langues déclarées suivent la réalité mesurée : les jeux de function
+    # calling sont anglophones, l'omettre rendrait l'en-tête faux.
+    languages = sorted(stats.get("by_prompt_lang", {}) or {"wo": 1}, key=lambda k: k != "wo")
+
     lines = [
         "---",
         "language:",
-        "- wo",
+        *(f"- {code}" for code in languages),
         "task_categories:",
         "- text-generation",
         "tags:",
@@ -268,13 +273,28 @@ def _limits_section(manifest: BuildManifest, stats: dict, total: int) -> list[st
         "calculée sur ce dataset serait optimiste — construire un jeu de test",
         "**wolof natif et indépendant** avant d'évaluer.",
         "",
-        "**Vérification de langue partielle.** Le filtre GlotLID n'a été appliqué",
-        "qu'à la source d'instructions (la plus bruitée). Les autres sources sont",
-        "reprises telles quelles : leur qualité est celle de leur producteur.",
+    ]
+
+    if versed := [e.dataset_id for e in manifest.entries if e.n_samples and e.split != "train"]:
+        lines += [
+            "**Des jeux d'évaluation ont été versés dans `train`.** "
+            + ", ".join(f"`{d}`" for d in versed)
+            + " n'ont pas de split d'entraînement : leurs splits `test`/`validation`",
+            "ont été intégrés pour le volume. Ne pas s'en servir pour mesurer un",
+            "modèle entraîné sur ce dataset — le résultat serait mécaniquement bon.",
+            "",
+        ]
+
+    lines += [
+        "**Vérification de langue partielle.** Le filtre GlotLID (`wol_Latn`) n'est",
+        "appliqué qu'aux sources issues de traduction automatique, les plus bruitées.",
+        "Les autres sont reprises telles quelles : leur qualité est celle de leur",
+        "producteur. Les jeux de *function calling* sont anglophones par nature.",
         "",
-        "**Déduplication interne à chaque source.** Les doublons exacts sont retirés",
-        "dataset par dataset, pas globalement : un même énoncé présent dans deux",
-        "sources différentes apparaît deux fois.",
+        "**Déduplication exacte uniquement.** Les doublons sont retirés globalement",
+        "(index partagé par toutes les sources), mais sur une empreinte **exacte** :",
+        "deux formulations proches d'une même phrase subsistent. Aucune",
+        "déduplication approchée (MinHash) n'est appliquée.",
         "",
     ]
     return lines

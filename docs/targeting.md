@@ -18,8 +18,8 @@ recherche de volume :
 
 | Famille | Tâches visées | État dans le dataset |
 |---|---|---|
-| **A — Data Extraction** | NER, intent, classification, QA/retrieval | partiellement couvert |
-| **B — Tool Use** (agentique) | function calling, décision d'appel/abstention | **non couvert** (voir §4) |
+| **A — Data Extraction** | NER, intent, classification, QA | couvert, sauf retrieval |
+| **B — Tool Use** (agentique) | function calling, décision d'appel/abstention | **couvert depuis la v0.2** (184 541 exemples avec appels réels) |
 
 Hors périmètre v1 : QA général ouvert, mathématiques, benchmarks de code.
 
@@ -44,98 +44,106 @@ Une source entre dans le build si elle satisfait les quatre conditions :
 |---|---|---|
 | 1 | **Wolof natif ou aligné wolof** | manuelle, à la lecture du dataset |
 | 2 | **Format structuré exploitable** (entrée → sortie étiquetée) | l'écriture d'un converter sert de preuve |
-| 3 | **Licence tracée** | `metadata/datasets_registry.yaml` (`license_status`, `commercial_ok`) |
-| 4 | **Qualité de la cible** | filtre LID `wol_Latn` quand la source est bruitée (`lid_filter` dans `configs/build.yaml`) |
+| 3 | **Qualité de la cible** | filtre LID `wol_Latn` quand la source est bruitée (`lid_filter` dans `configs/build.yaml`) |
+| 4 | **Apport réel de volume** | la déduplication globale du build tranche : une source entièrement recouverte ne produit rien |
+
+Une exception assumée au critère 1 : les jeux de *function calling* sont
+**anglophones**. Ils n'apportent pas de wolof mais la capacité d'appeler un
+outil, que le transfert multilingue propage. Ils sont étiquetés
+`prompt_lang=en` et ne sont jamais comptés comme de la donnée wolof.
 
 Le critère 2 explique un point qui surprend à la lecture du dépôt : la liste des
-converters, celle du registre et celle du plan de build sont **identiques** (11).
+converters, celle du registre et celle du plan de build sont **identiques** (30).
 Ce n'est pas un défaut de conception mais la conséquence du critère — écrire un
 converter *est* l'acte d'inclusion. Le ciblage réel se lit donc dans ce que le
 dépôt **n'a pas** intégré, d'où `metadata/candidates.yaml`.
 
-> ⚠️ Ces critères sont appliqués **par une personne**, pas par le code. Aucun
-> garde-fou n'empêche aujourd'hui d'ajouter au plan de build une source en
-> licence non commerciale : `commercial_ok` est descriptif, jamais lu par
-> `build.py`. C'est une limite connue, pas un oubli.
+> La licence n'est **pas** un critère d'inclusion : le projet est open source.
+> `metadata/datasets_registry.yaml` continue de la tracer à titre informatif
+> (`license_status`, `commercial_ok`), mais aucune décision de périmètre ne s'y
+> appuie.
 
 ---
 
-## 3. Ce qui est intégré (11 sources)
+## 3. Ce qui est intégré (30 sources)
 
-Volumes mesurés à la source ; le détail par licence est dans
-[`dataset_catalog.md`](dataset_catalog.md).
+Volumes de **lignes source** mesurés par `galsenai-sft inventory` ; le détail
+par licence est dans [`dataset_catalog.md`](dataset_catalog.md).
 
 | Tâche | Sources | Lignes source | Rôle |
-|---|---|---:|---|
-| classification | `michsethowusu/wolof-sentiments-corpus`, `michsethowusu/wolof-emotions-corpus`, `Davlan/sib200` | 641 921 | volume ; **surreprésenté** (voir §5) |
-| tool_use | `michsethowusu/Code-170k-wolof` | 176 999 | format conversationnel, **pas** du tool calling |
-| translation | `galsenai/french-wolof-translation`, `bilalfaye/english-wolof-french-dataset` | 32 447 | capacité pivot fr↔wo |
-| intent | `karim155/WolBanking77`, `masakhane/InjongoIntent` | 14 072 | ancre wolof gold, domaine bancaire |
-| instruction | `m-a-d-i/wori-wolof-instructions` | 3 724 | instructions wolof natives (reverse-instructions) |
-| ner | `mbaye930/WolofEntityLinking` | 1 045 | seule source NER retenue |
-| qa | `masakhane/afriqa` | 503 | QA wolof à pivot français |
+|---|---:|---:|---|
+| translation | 9 | 305 366 | capacité pivot fr/en ↔ wo ; corpus partiellement recouvrants |
+| tool_use | 5 | 324 479 | **function calling réel** (Toucan, Hermes, ToolACE, When2Call) + Q/R de code |
+| classification | 4 | 642 521 | sentiment, émotion, thématique, inférence (NLI) — **plafonné au build** |
+| instruction | 4 | 116 304 | instructions wolof (WORI natif, Alpaca traduit, Aya) |
+| intent | 2 | 14 072 | ancre wolof gold + domaine bancaire |
+| ner | 2 | 5 638 | MasakhaNER 2.0 (gold) + entity linking |
+| qa | 4 | 2 153 | QA ouvert, compréhension de lecture, QCM, maths |
+| retrieval | 0 | 0 | **capacité absente** |
 
 ---
 
 ## 4. Ce qui est écarté, et pourquoi
 
-C'est la partie que le dépôt ne portait pas jusqu'ici. Chaque exclusion est
-tracée dans `metadata/candidates.yaml` et mesurée par l'inventaire.
+Chaque exclusion est tracée dans `metadata/candidates.yaml` et mesurée par
+l'inventaire. Les motifs sont désormais techniques, non juridiques : le projet
+est open source, la licence d'une source n'est plus un critère de blocage.
 
 ### 4.1 Écarté sur décision
 
 | Dataset | Tâche | Lignes | Motif |
 |---|---|---:|---|
-| `masakhane/masakhaner2` (wol) | ner | 4 593 | **CC BY-NC.** Seul NER wolof gold annoté humainement — 4,4 fois notre source NER actuelle. Incompatible avec un jeu commercial ; réservé à un futur track recherche. |
-| `ngia/alpaca-data-in-wolof` | instruction | 47 463 | **Traduction automatique non auditée.** 12,7 fois notre volume d'instructions. Le ciblage interdit la MT non vérifiée comme donnée gold. Réintégrable après audit LID + qualité. |
-| `Salesforce/APIGen-MT-5k` | tool_use | 5 000 | CC BY-NC, même règle que MasakhaNER 2.0. |
+| `vonewman/alpaca-dataset-wolof` | instruction | 47 463 | Reconditionnement d'`alpaca-data-in-wolof` (intégré) au format Alpaca — même compte exact. |
+| `vonewman/alpaca-sharegpt-wolof` | instruction | 47 463 | Même contenu, format ShareGPT. |
+| `vonewman/wolof-instruction-dataset-alpaca` | instruction | 3 | Dépôt quasi vide (parquet de 9 Ko). |
 
-Ces trois exclusions représentent **57 056 lignes**, dont 52 056 en wolof — soit
-plus que l'ensemble de nos tâches instruction + NER + QA + intent réunies. Ce
-n'est pas un détail : c'est le prix payé pour rester licence-propre et
-qualité-propre.
+Aucune de ces exclusions ne perd de contenu : ce sont des rediffusions de
+sources déjà intégrées. La déduplication globale les écarterait de toute façon,
+mais autant ne pas payer le téléchargement.
 
 ### 4.2 Ciblé, converter non écrit
 
-| Dataset | Tâche | Lignes | Priorité |
+| Dataset | Tâche | Lignes | Blocage |
 |---|---|---:|---|
-| `Agent-Ark/Toucan-1.5M` (SFT) | tool_use | 119 287 | P0 — Apache-2.0, multi-tours réellement exécutés |
-| `nvidia/When2Call` (train_sft) | tool_use | 15 000 | P1 — décision d'appel / abstention |
-| `Team-ACE/ToolACE` | tool_use | 11 300 | P1 — diversité de schémas d'API |
-| `NousResearch/hermes-function-calling-v1` | tool_use | 1 893 | P0 — verrouille le format `<tool_call>` |
-| `Salesforce/xlam-function-calling-60k` | tool_use | ~60 000 | P0 — CC BY 4.0 mais dépôt *gated* |
-| `miracl/miracl` | retrieval | — | P1 — l'API taille ne répond pas (501) |
+| `Salesforce/xlam-function-calling-60k` | tool_use | ~60 000 | dépôt *gated* : accepter les conditions à la main |
+| `Salesforce/APIGen-MT-5k` | tool_use | 5 000 | intégrable sans travail de schéma (multi-tours supporté) |
+| `miracl/miracl` | retrieval | — | script de chargement (API taille en 501) |
+| `masakhane/masakhaner` / `-x` | ner | ~3 300 | recouvrement quasi total avec MasakhaNER 2.0 intégré |
+| `AmazonScience/massive` | intent | 11 514 | aucune variante wolof — exige une localisation, pas une intégration |
 
-### 4.3 Deux trous à assumer
+### 4.3 Ce qui reste à zéro
 
-**La famille B n'existe pas dans le dataset.** La tâche `tool_use` pèse 19,5 %
-des exemples produits, mais aucun n'est un appel d'outil : `Code-170k-wolof` est
-du Q/R de code traduit, tous les exemples font exactement deux messages et aucun
-ne porte de `tool_calls`. Le nom de la tâche décrit une intention, pas un
-contenu. Les sources du §4.2 sont la trajectoire de rattrapage.
-
-**La capacité retrieval est à zéro.** `TaskType.RETRIEVAL` existe dans le schéma
-(`core/schema.py`) sans aucun converter pour l'alimenter.
+**Retrieval.** `TaskType.RETRIEVAL` existe dans le schéma, aucun converter ne
+l'alimente. Il n'existe pas de corpus IR wolof : la voie est la synthèse sur le
+corpus de pré-entraînement (protocole SWIM-IR), pas l'intégration.
 
 ---
 
-## 5. Conséquence connue : le déséquilibre
+## 5. Plafonds réels par tâche
 
-La classification représente 641 921 lignes source sur 870 711, soit **70,8 %
-des exemples produits**. Ce n'est pas le résultat d'un choix de ciblage mais de
-la disponibilité : les deux corpus de sentiments et d'émotions sont, de loin,
-les plus gros jeux wolof étiquetés disponibles.
+L'objectif « amener chaque tâche au niveau de la classification » (640 964
+exemples en v0.1) se heurte à une contrainte de disponibilité mondiale, pas
+d'ingénierie. Volumes atteignables en intégrant **tout** le wolof existant :
 
-Deux leviers existent et **ne sont pas activés** :
+| Tâche | Atteint en v0.2 | Plafond mondial estimé | Verdict |
+|---|---:|---:|---|
+| translation | 573 832 | ~640 000 | **cible quasi atteinte** |
+| tool_use | 206 557 | ~500 000 (sources EN) | atteignable |
+| instruction | 60 644 | ~120 000 | ×5 sous la cible |
+| intent | 15 012 | ~15 000 | **plafond atteint** |
+| ner | 5 638 | ~6 500 | **plafond atteint** — ×100 sous la cible |
+| qa | 2 152 | ~3 000 | **plafond atteint** — ×200 sous la cible |
+| retrieval | 0 | 0 | inexistant |
 
-- `max_samples` par entrée dans `configs/build.yaml` — plafonner ces deux
-  sources rééquilibrerait le mélange à la construction ;
-- pondération des tâches à l'entraînement — décision qui appartient à l'équipe
-  fine-tuning, pas à ce dépôt.
+Pour NER, QA, intent et retrieval, **aucune recherche de sources ne comblera
+l'écart** : les données n'existent pas. Les seules voies sont la synthèse sur
+le corpus wolof (SWIM-IR pour l'IR, Pile-NER distillé pour le NER) et la
+localisation de jeux EN/FR (protocole INJONGO pour l'intent) — c'est de la
+production de données, pas du sourcing.
 
-Le choix actuel est de **livrer le volume brut et de documenter le déséquilibre**
-plutôt que de trancher à la place du consommateur. Ce choix est signalé dans la
-data card du dataset publié.
+C'est pourquoi l'équilibrage de la v0.2 passe aussi par le **plafonnement de la
+classification** (`max_samples: 60000` sur les deux corpus dominants) : rapprocher
+les tâches par le haut est impossible, on les rapproche donc aussi par le bas.
 
 ---
 

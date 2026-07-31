@@ -8,34 +8,66 @@
 #    lid_filter:  filtre la cible wolof au LID (datasets bruités)
 #    max_samples: plafond d'exemples produits (rééquilibrage d'un dataset
 #                 surreprésenté ; sans plafond, le dataset entre en entier)
+#
+#  Objectif de la v0.2 : rapprocher chaque tâche du volume de la
+#  classification. Les deux corpus de classification sont désormais plafonnés
+#  (`max_samples`) et les autres tâches élargies — cf. ETAT_AVANCEMENT §4.
+#  Ciblage et sources écartées : docs/targeting.md
 # ═══════════════════════════════════════════════════════════════════
 datasets:
-  # --- Traduction ---
+  # ───────────────────────── Traduction ─────────────────────────
+  # Ces corpus se recouvrent (centralized_… agrège plusieurs des autres) :
+  # sans danger, la déduplication est globale au build depuis la v0.2.
+  - { id: galsenai/centralized_wolof_french_translation_data, split: train }
+  - { id: sudoping01/english-wolof-translation, split: train }
   - { id: galsenai/french-wolof-translation, split: train }
   # bilalfaye embarque de l'audio (~5 Go) : on ne lit que les colonnes texte.
   - { id: bilalfaye/english-wolof-french-dataset, split: train, columns: [en, wo, fr] }
+  - { id: MaroneAI/Wolof-to-French_Translation-Dataset, split: train }
+  - { id: MaroneAI/French-Wolof_Translation-Dataset, split: train }
+  - { id: dofbi/jolof, split: train }
+  - { id: Alwaly/french-wolof-translation-gs, split: train }
+  - { id: galsenai/english-wolof-smol-translation, split: train }
 
-  # --- Intent ---
+  # ───────────────────────── Instruction ─────────────────────────
+  # lid_filter : ces trois corpus viennent de traduction automatique ou
+  # d'agrégation ; WORI contient ~13 % de cibles bruitées/non-wolof.
+  - { id: m-a-d-i/wori-wolof-instructions, split: train, lid_filter: true }
+  - { id: bilalfaye/wolof-sft, split: train, lid_filter: true }
+  - { id: ngia/alpaca-data-in-wolof, split: train, lid_filter: true }
+  - { id: CohereLabs/aya_collection_language_split, split: train, config: wolof }
+
+  # ───────────────────────── Intent ─────────────────────────
   - { id: masakhane/InjongoIntent, split: train, config: wol }
   - { id: karim155/WolBanking77, split: train }
 
-  # --- NER ---
+  # ───────────────────────── NER ─────────────────────────
+  - { id: masakhane/masakhaner2, split: train, config: wol }
   - { id: mbaye930/WolofEntityLinking, split: train }
 
-  # --- Classification ---
-  # ⚠️ Déséquilibre : sentiments + émotions = 640k exemples sur 905k (71 % du
-  # dataset). Décision en attente (cf. ETAT_AVANCEMENT §4) : ajouter
-  # `max_samples: 50000` sur ces deux entrées pour rééquilibrer le mélange.
-  - { id: Davlan/sib200, split: train, config: wol_Latn }
-  - { id: michsethowusu/wolof-sentiments-corpus, split: train }
-  - { id: michsethowusu/wolof-emotions-corpus, split: train }
-
-  # --- QA ---
+  # ───────────────────────── QA ─────────────────────────
+  # belebele / afrimmlu / afrimgsm n'ont pas de split train : on prend leurs
+  # splits d'origine. Arbitrage assumé (volume contre évaluabilité), signalé
+  # dans la data card.
   - { id: masakhane/afriqa, split: train, config: wol }
+  - { id: facebook/belebele, split: test, config: wol_Latn }
+  - { id: masakhane/afrimmlu, split: test, config: wol }
+  - { id: masakhane/afrimgsm, split: test, config: wol }
 
-  # --- Instruction ---
-  # lid_filter: WORI contient ~13% de cibles bruitées/non-wolof -> on filtre.
-  - { id: m-a-d-i/wori-wolof-instructions, split: train, lid_filter: true }
+  # ───────────────────────── Classification ─────────────────────────
+  # ⚠️ Plafond : sentiments + émotions pesaient 640k sur 905k (71 %). Les
+  # plafonner à 60k chacun ramène la classification au niveau des autres
+  # tâches sans jeter la diversité (l'échantillon reste dans l'ordre source).
+  - { id: michsethowusu/wolof-sentiments-corpus, split: train, max_samples: 60000 }
+  - { id: michsethowusu/wolof-emotions-corpus, split: train, max_samples: 60000 }
+  - { id: Davlan/sib200, split: train, config: wol_Latn }
+  - { id: masakhane/afrixnli, split: test, config: wol }
 
-  # --- Tool use / code ---
-  - { id: michsethowusu/Code-170k-wolof, split: train }
+  # ───────────────────────── Tool use ─────────────────────────
+  # Code-170k = Q/R de code (pas d'appel d'outil) : plafonné pour laisser la
+  # place au vrai function calling ci-dessous.
+  - { id: michsethowusu/Code-170k-wolof, split: train, max_samples: 60000 }
+  - { id: Agent-Ark/Toucan-1.5M, split: train, config: SFT }
+  - { id: nvidia/When2Call, split: train, config: train_sft }
+  - { id: Team-ACE/ToolACE, split: train }
+  - { id: NousResearch/hermes-function-calling-v1, split: train, config: func_calling }

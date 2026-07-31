@@ -10,7 +10,7 @@ les décisions de conception.
 | **Modulaire** | Chaque responsabilité dans un sous-package (`core`, `converters`, `validators`, `translators`, `exporters`, `metadata`). |
 | **Extensible (Open/Closed)** | Ajouter un dataset = 1 converter décoré `@register`, **sans** modifier le pipeline. Idem pour un backend LID ou de traduction (Protocols). |
 | **Reproductible** | GlotLID **v3 épinglé** ; build **manifest** avec checksums SHA-256 ; seeds déterministes dans les converters. |
-| **Testable** | Loader et backends injectables → tests sans réseau ni GPU. 101 tests unitaires. |
+| **Testable** | Loader et backends injectables → tests sans réseau ni GPU. 133 tests unitaires. |
 | **Typé / validable** | Tout passe par des modèles **pydantic** (`Sample`, `DatasetMeta`, `BuildManifest`…). |
 | **Documenté** | Docstrings systématiques + `docs/` + catalogue auto-généré. |
 

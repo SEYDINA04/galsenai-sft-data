@@ -90,17 +90,27 @@ def validate_quality(
     return report
 
 
-def filter_quality(samples: Iterable[Sample], cfg: QualityConfig | None = None) -> Iterator[Sample]:
+def filter_quality(
+    samples: Iterable[Sample],
+    cfg: QualityConfig | None = None,
+    seen: set[int] | None = None,
+) -> Iterator[Sample]:
     """Filtre un flux : retire vides/doublons (erreurs bloquantes), garde le reste.
 
-    L'index de déduplication ne conserve que **64 bits** d'empreinte par exemple
-    (au lieu des 64 caractères hexadécimaux) : ~4× moins de mémoire, soit
-    quelques Mo même sur des millions d'exemples. Risque de collision négligeable
+    ``seen`` permet de **partager l'index de déduplication entre plusieurs
+    datasets** : indispensable dès que des sources se recouvrent (plusieurs
+    corpus de traduction wolof agrègent les mêmes phrases OPUS/MAFAND). Sans
+    index partagé, chaque dataset ne se dédupliquerait que contre lui-même et
+    le dataset final accumulerait les doublons inter-sources.
+
+    L'index ne conserve que **64 bits** d'empreinte par exemple (au lieu des 64
+    caractères hexadécimaux) : ~4× moins de mémoire, soit quelques dizaines de
+    Mo même sur des millions d'exemples. Risque de collision négligeable
     (< 1e-7 sur 1 M d'exemples) et sans conséquence : un doublon supposé est
     simplement écarté.
     """
     cfg = cfg or get_settings().quality
-    seen: set[int] = set()
+    seen = seen if seen is not None else set()
     for s in samples:
         issues = check_sample(s, cfg)
         if any(i.severity is Severity.ERROR for i in issues):

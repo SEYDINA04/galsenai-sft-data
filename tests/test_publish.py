@@ -150,7 +150,7 @@ def test_absence_de_split_signalee(card):
 
 def test_limites_qualite_signalees(card):
     assert "Vérification de langue partielle" in card
-    assert "Déduplication interne à chaque source" in card
+    assert "Déduplication exacte uniquement" in card
 
 
 def test_renvoi_vers_licences_et_ciblage(card):
@@ -196,3 +196,44 @@ def test_manifest_vide_ne_leve_pas(tmp_path, monkeypatch):
     empty = BuildManifest(version="0", created_at="2026-01-01T00:00:00+00:00")
     card = build_datacard(empty, "org/vide")
     assert "org/vide" in card
+
+
+# ════════════════════════════════════════════════════════════════════
+#  v0.2 : la carte doit suivre la réalité du build
+# ════════════════════════════════════════════════════════════════════
+def test_langues_declarees_suivent_les_statistiques(card):
+    """Les jeux de function calling sont anglophones : l'omettre serait faux."""
+    header = card.split("---")[1]
+    assert "- wo" in header and "- fr" in header
+    assert header.index("- wo") < header.index("- fr"), "le wolof reste la langue principale"
+
+
+def test_jeux_d_evaluation_verses_dans_train_sont_signales(tmp_path, monkeypatch):
+    from galsenai_sft.core.config import get_settings
+
+    monkeypatch.setattr(get_settings().paths, "interim", tmp_path)
+    m = BuildManifest(
+        version="0.2.0",
+        created_at="2026-07-31T01:04:09+00:00",
+        total_samples=100,
+        by_task={"qa": 100},
+        entries=[
+            BuildEntryReport(
+                dataset_id="facebook/belebele", task="qa", split="test", n_raw=100, n_samples=100
+            )
+        ],
+    )
+    card = build_datacard(m, "org/x")
+    assert "versés dans `train`" in card
+    assert "facebook/belebele" in card
+
+
+def test_pas_d_alerte_eval_quand_tout_vient_de_train(card):
+    assert "versés dans `train`" not in card
+
+
+def test_dedup_decrite_comme_globale_et_exacte(card):
+    """La v0.1 annonçait une déduplication locale : ce n'est plus vrai."""
+    assert "globalement" in card
+    assert "index partagé" in card
+    assert "MinHash" in card

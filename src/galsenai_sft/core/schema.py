@@ -44,10 +44,16 @@ class TaskType(StrEnum):
 
 
 class PromptLang(StrEnum):
-    """Langue de la consigne (le contenu cible reste du wolof)."""
+    """Langue de la consigne (le contenu cible reste du wolof).
+
+    ``EN`` couvre les jeux de *function calling* anglophones : ils n'apportent
+    pas de wolof mais la capacité agentique, que le transfert multilingue
+    propage. Les étiqueter ``wo`` rendrait la statistique par langue fausse.
+    """
 
     WO = "wo"
     FR = "fr"
+    EN = "en"
 
 
 class ToolCall(BaseModel):

@@ -91,6 +91,56 @@ QA_TEMPLATES: dict[PromptLang, list[str]] = {
     ],
 }
 
+# --- QCM avec passage : {passage}, {question}, {choices} -------------------
+# Le modèle doit répondre par la **lettre** : réponse courte, vérifiable
+# automatiquement, et qui n'exige pas de regénérer le texte de l'option.
+MCQ_PASSAGE_TEMPLATES: dict[PromptLang, list[str]] = {
+    PromptLang.WO: [
+        "Jàngal mbind mii, tontul laaj bi, te tann benn tontu (A, B, C walla D).\n\n"
+        "{passage}\n\nLaaj: {question}\n{choices}",
+    ],
+    PromptLang.FR: [
+        "Lis le texte, réponds à la question et choisis une seule option "
+        "(A, B, C ou D).\n\n{passage}\n\nQuestion : {question}\n{choices}",
+    ],
+}
+
+# --- QCM sans passage (connaissances) : {question}, {choices} --------------
+MCQ_TEMPLATES: dict[PromptLang, list[str]] = {
+    PromptLang.WO: [
+        "Tann tontu bu baax bi (A, B, C walla D).\n\n{question}\n{choices}",
+    ],
+    PromptLang.FR: [
+        "Choisis la bonne réponse (A, B, C ou D).\n\n{question}\n{choices}",
+    ],
+}
+
+# --- Problème de mathématiques : {question} -------------------------------
+MATH_TEMPLATES: dict[PromptLang, list[str]] = {
+    PromptLang.WO: [
+        "Nattal problem bii te bind kayit bi rekk: {question}",
+    ],
+    PromptLang.FR: [
+        "Résous ce problème et donne uniquement le résultat : {question}",
+    ],
+}
+
+# --- Inférence textuelle (NLI) : {premise}, {hypothesis} ------------------
+# Les libellés de sortie restent en anglais (schéma, pas consigne), comme les
+# types d'entités NER et les labels de classification.
+NLI_TEMPLATES: dict[PromptLang, list[str]] = {
+    PromptLang.WO: [
+        "Xool ñaari kàddu yii. Ndax ñaareelu bi dëggu na (entailment), "
+        "amul solo (neutral), walla weddi na (contradiction)?\n"
+        "Kàddu 1: {premise}\nKàddu 2: {hypothesis}",
+    ],
+    PromptLang.FR: [
+        "Détermine si la seconde phrase découle de la première (entailment), "
+        "est indépendante (neutral) ou la contredit (contradiction).\n"
+        "Phrase 1 : {premise}\nPhrase 2 : {hypothesis}",
+    ],
+}
+
 # --- Classification thématique/sentiment : {text}, {task_desc}, {labels} ----
 CLASSIFY_TEMPLATES: dict[PromptLang, list[str]] = {
     PromptLang.WO: [

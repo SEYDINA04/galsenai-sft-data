@@ -3,7 +3,7 @@
 #
 #  Complète `configs/build.yaml` (ce qui entre) par ce qui n'entre pas, et
 #  pourquoi. Sans ce fichier, le périmètre du dataset serait une liste plate
-#  de 11 identifiants sans justification : l'exclusion d'une source est une
+#  d'identifiants sans justification : l'exclusion d'une source est une
 #  décision, elle doit être tracée au même titre que l'inclusion.
 #
 #  `galsenai-sft inventory` mesure ces datasets à la source (API HuggingFace)
@@ -17,80 +17,87 @@
 #  Méthodologie et sources : docs/targeting.md
 # ═══════════════════════════════════════════════════════════════════
 datasets:
-  # ───────────────────────────── Wolof natif ─────────────────────────────
-  - id: masakhane/masakhaner2
-    task: ner
-    config: wol
-    split: train
-    status: excluded
-    reason: >-
-      Seul NER wolof gold annoté humainement, mais CC BY-NC : incompatible avec
-      un jeu utilisable en commercial. Réservé à un futur track recherche.
-
-  - id: ngia/alpaca-data-in-wolof
+  # ───────────────────────── Doublons de contenu ─────────────────────────
+  # Mêmes 47 463 lignes que `ngia/alpaca-data-in-wolof` (intégré), rediffusées
+  # dans deux autres formats. Les intégrer ne produirait que des doublons —
+  # écartés de toute façon par la déduplication globale, mais autant ne pas
+  # payer le téléchargement.
+  - id: vonewman/alpaca-dataset-wolof
     task: instruction
     split: train
     status: excluded
     reason: >-
-      Traduction automatique non auditée. Le ciblage impose de ne jamais
-      utiliser de MT non vérifiée comme donnée gold ; à réintégrer seulement
-      après audit LID + qualité (cf. le filtre appliqué à WORI).
+      Reconditionnement d'alpaca-data-in-wolof au format Alpaca (même compte
+      exact : 47 463). Déjà couvert par la source d'origine, intégrée.
 
-  # ──────────────────── Tool use — famille B (P0/P1) ────────────────────
-  # Aucun tool-calling réel n'est présent dans le dataset actuel : la tâche
-  # `tool_use` ne contient aujourd'hui que du Q/R de code traduit. Ces sources
-  # sont la trajectoire de rattrapage.
-  - id: Agent-Ark/Toucan-1.5M
-    task: tool_use
-    config: SFT
-    split: train
-    status: candidate
-    reason: >-
-      P0. Apache-2.0, trajectoires multi-tours réellement exécutées (MCP).
-      Choix par défaut pour introduire du vrai function calling.
-
-  - id: NousResearch/hermes-function-calling-v1
-    task: tool_use
-    config: func_calling
-    split: train
-    status: candidate
-    reason: "P0. Apache-2.0. Verrouille le format <tool_call> de l'écosystème."
-
-  - id: nvidia/When2Call
-    task: tool_use
-    config: train_sft
-    split: train
-    status: candidate
-    reason: >-
-      P1. Décision d'appel / abstention — indispensable à un petit modèle, qui
-      sur-appelle les outils sans contre-exemples.
-
-  - id: Team-ACE/ToolACE
-    task: tool_use
-    split: train
-    status: candidate
-    reason: "P1. Apache-2.0, 26k+ API : diversité de schémas."
-
-  - id: Salesforce/xlam-function-calling-60k
-    task: tool_use
-    split: train
-    status: candidate
-    reason: >-
-      P0. CC BY 4.0 mais dépôt *gated* : l'API taille répond 404 tant que les
-      conditions ne sont pas acceptées. Volume annoncé par la source : 60 000.
-
-  - id: Salesforce/APIGen-MT-5k
-    task: tool_use
+  - id: vonewman/alpaca-sharegpt-wolof
+    task: instruction
     split: train
     status: excluded
-    reason: "CC BY-NC : exclu du jeu commercial, comme MasakhaNER 2.0."
+    reason: >-
+      Même contenu que ci-dessus, au format ShareGPT. Aucun apport de volume.
 
-  # ───────────────────────── Retrieval (gap total) ─────────────────────────
+  - id: vonewman/wolof-instruction-dataset-alpaca
+    task: instruction
+    split: train
+    status: excluded
+    reason: "Dépôt quasi vide (parquet de 9 Ko) : volume négligeable."
+
+  # ───────────────────────── NER — plafond mondial atteint ─────────────────
+  - id: masakhane/masakhaner
+    task: ner
+    config: wol
+    split: train
+    status: candidate
+    reason: >-
+      MasakhaNER 1.0 (1 871 lignes wolof). Largement inclus dans MasakhaNER 2.0
+      désormais intégré ; l'écart résiduel ne justifie pas encore un converter.
+      L'API taille ne répond pas (501) : le dataset repose sur un script.
+
+  - id: masakhane/masakhaner-x
+    task: ner
+    split: train
+    status: candidate
+    reason: >-
+      Agrégat MasakhaNER 1.0 + 2.0 en annotations de *spans* (format plus
+      proche du SFT que le BIO). Recouvrement quasi total avec l'intégré.
+
+  # ───────────────────────── Retrieval — capacité à zéro ──────────────────
   - id: miracl/miracl
     task: retrieval
     config: fr
     split: train
     status: candidate
     reason: >-
-      P1. Apache-2.0. `TaskType.RETRIEVAL` existe dans le schéma mais aucun
-      converter ne l'alimente : la capacité IR est à zéro aujourd'hui.
+      `TaskType.RETRIEVAL` existe dans le schéma mais aucun converter ne
+      l'alimente : la capacité IR reste à zéro après la v0.2. L'API taille
+      répond 501 (script de chargement) — passer par la branche parquet.
+
+  # ───────────────────────── Tool use — reste à intégrer ──────────────────
+  - id: Salesforce/xlam-function-calling-60k
+    task: tool_use
+    split: train
+    status: candidate
+    reason: >-
+      Dépôt *gated* : l'API taille répond 404 tant que les conditions ne sont
+      pas acceptées. Volume annoncé par la source : 60 000 appels
+      exécutés-vérifiés. À débloquer manuellement puis intégrer.
+
+  - id: Salesforce/APIGen-MT-5k
+    task: tool_use
+    split: train
+    status: candidate
+    reason: >-
+      5 000 trajectoires multi-tours de référence. Le format multi-tours est
+      désormais supporté (Toucan) : intégrable sans nouveau travail de schéma.
+
+  # ───────────────────────── Intent — pas de wolof disponible ─────────────
+  - id: AmazonScience/massive
+    task: intent
+    config: fr-FR
+    split: train
+    status: candidate
+    reason: >-
+      Aucune variante wolof n'existe. Utilisable seulement par localisation
+      (protocole INJONGO) — c'est un travail de production de données, pas
+      d'intégration. L'intent plafonne à ~15 000 exemples sans cela.

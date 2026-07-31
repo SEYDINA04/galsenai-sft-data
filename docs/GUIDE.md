@@ -140,7 +140,7 @@ prendre ensemble.
 
 - **Ajouter un nouveau dataset = écrire ~15 lignes** (un « converter »), sans
   rien casser d'autre (principe Open/Closed).
-- **Tout est testé** (101 tests automatiques) et vérifié à chaque modification (CI).
+- **Tout est testé** (133 tests automatiques) et vérifié à chaque modification (CI).
 - **Reproductible** : chaque build produit un « manifest » avec des empreintes
   (checksums) — on peut refaire exactement le même dataset plus tard.
 - **Documenté** : architecture, flux de données, guide de contribution.

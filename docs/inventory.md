@@ -6,48 +6,67 @@
 > en produire plusieurs exemples SFT (traduction bidirectionnelle) ou moins
 > (déduplication, filtre LID).
 
-- **Généré le** : 2026-07-31T00:18:52.838294+00:00
-- **Lignes intégrées au build** : 870,711
-- **Lignes atteignables** (intégré + candidats) : 1,018,191
+- **Généré le** : 2026-07-31T02:05:28.994891+00:00
+- **Lignes intégrées au build** : 1,410,533
+- **Lignes atteignables** (intégré + candidats) : 1,427,047
 
 ## Par tâche
 
 | tâche | sources | intégré | candidat | écarté | atteignable |
 |---|---:|---:|---:|---:|---:|
-| classification | 3 | 641,921 | 0 | 0 | 641,921 |
-| instruction | 2 | 3,724 | 0 | 47,463 | 3,724 |
-| intent | 2 | 14,072 | 0 | 0 | 14,072 |
-| ner | 2 | 1,045 | 0 | 4,593 | 1,045 |
-| qa | 1 | 503 | 0 | 0 | 503 |
+| classification | 4 | 642,521 | 0 | 0 | 642,521 |
+| instruction | 7 | 116,304 | 0 | 94,929 | 116,304 |
+| intent | 3 | 14,072 | 11,514 | 0 | 25,586 |
+| ner | 4 | 5,638 | 0 | 0 | 5,638 |
+| qa | 4 | 2,153 | 0 | 0 | 2,153 |
 | retrieval | 1 | 0 | 0 | 0 | 0 |
-| tool_use | 7 | 176,999 | 147,480 | 5,000 | 324,479 |
-| translation | 2 | 32,447 | 0 | 0 | 32,447 |
+| tool_use | 7 | 324,479 | 5,000 | 0 | 329,479 |
+| translation | 9 | 305,366 | 0 | 0 | 305,366 |
 
 ## Par source
 
 | dataset | tâche | statut | config/split | ciblé | tous splits | note |
 |---|---|---|---|---:|---:|---|
 | `Davlan/sib200` | classification | ✅ intégré | wol_Latn/train | 701 | 1,004 |  |
+| `masakhane/afrixnli` | classification | ✅ intégré | wol/test | 600 | 1,050 |  |
 | `michsethowusu/wolof-emotions-corpus` | classification | ✅ intégré | —/train | 320,611 | 320,611 |  |
 | `michsethowusu/wolof-sentiments-corpus` | classification | ✅ intégré | —/train | 320,609 | 320,609 |  |
-| `ngia/alpaca-data-in-wolof` | instruction | ⛔ écarté | —/train | 47,463 | 47,463 | Traduction automatique non auditée. Le ciblage impose de ne jamais utiliser de MT non vérifiée comme donnée gold ; à réintégrer seulement après audit LID + qualité (cf. le filtre appliqué à WORI). |
+| `vonewman/alpaca-dataset-wolof` | instruction | ⛔ écarté | —/train | 47,463 | 47,463 | Reconditionnement d'alpaca-data-in-wolof au format Alpaca (même compte exact : 47 463). Déjà couvert par la source d'origine, intégrée. |
+| `vonewman/alpaca-sharegpt-wolof` | instruction | ⛔ écarté | —/train | 47,463 | 47,463 | Même contenu que ci-dessus, au format ShareGPT. Aucun apport de volume. |
+| `vonewman/wolof-instruction-dataset-alpaca` | instruction | ⛔ écarté | —/train | 3 | 3 | Dépôt quasi vide (parquet de 9 Ko) : volume négligeable. |
+| `CohereLabs/aya_collection_language_split` | instruction | ✅ intégré | wolof/train | 3,146 | 3,699 |  |
+| `bilalfaye/wolof-sft` | instruction | ✅ intégré | —/train | 61,971 | 61,971 |  |
 | `m-a-d-i/wori-wolof-instructions` | instruction | ✅ intégré | —/train | 3,724 | 3,724 |  |
+| `ngia/alpaca-data-in-wolof` | instruction | ✅ intégré | —/train | 47,463 | 47,463 |  |
+| `AmazonScience/massive` | intent | 🕐 candidat | fr-FR/train | 11,514 | 16,521 | Aucune variante wolof n'existe. Utilisable seulement par localisation (protocole INJONGO) — c'est un travail de production de données, pas d'intégration. L'intent plafonne à ~15 000 exemples sans cela. |
 | `karim155/WolBanking77` | intent | ✅ intégré | —/train | 11,832 | 14,791 |  |
 | `masakhane/InjongoIntent` | intent | ✅ intégré | wol/train | 2,240 | 3,198 |  |
-| `masakhane/masakhaner2` | ner | ⛔ écarté | wol/train | 4,593 | 6,561 | Seul NER wolof gold annoté humainement, mais CC BY-NC : incompatible avec un jeu utilisable en commercial. Réservé à un futur track recherche. |
+| `masakhane/masakhaner` | ner | 🕐 candidat | wol/train | — | — | MasakhaNER 1.0 (1 871 lignes wolof). Largement inclus dans MasakhaNER 2.0 désormais intégré ; l'écart résiduel ne justifie pas encore un converter. L'API taille ne répond pas (501) : le dataset repose sur un script. |
+| `masakhane/masakhaner-x` | ner | 🕐 candidat | —/train | — | — | Agrégat MasakhaNER 1.0 + 2.0 en annotations de *spans* (format plus proche du SFT que le BIO). Recouvrement quasi total avec l'intégré. |
+| `masakhane/masakhaner2` | ner | ✅ intégré | wol/train | 4,593 | 6,561 |  |
 | `mbaye930/WolofEntityLinking` | ner | ✅ intégré | —/train | 1,045 | 1,045 |  |
+| `facebook/belebele` | qa | ✅ intégré | wol_Latn/test | 900 | 900 |  |
+| `masakhane/afrimgsm` | qa | ✅ intégré | wol/test | 250 | 258 |  |
+| `masakhane/afrimmlu` | qa | ✅ intégré | wol/test | 500 | 608 |  |
 | `masakhane/afriqa` | qa | ✅ intégré | wol/train | 503 | 1,341 |  |
-| `miracl/miracl` | retrieval | 🕐 candidat | fr/train | — | — | P1. Apache-2.0. `TaskType.RETRIEVAL` existe dans le schéma mais aucun converter ne l'alimente : la capacité IR est à zéro aujourd'hui. |
-| `Agent-Ark/Toucan-1.5M` | tool_use | 🕐 candidat | SFT/train | 119,287 | 119,287 | P0. Apache-2.0, trajectoires multi-tours réellement exécutées (MCP). Choix par défaut pour introduire du vrai function calling. |
-| `NousResearch/hermes-function-calling-v1` | tool_use | 🕐 candidat | func_calling/train | 1,893 | 1,893 | P0. Apache-2.0. Verrouille le format <tool_call> de l'écosystème. |
-| `Salesforce/xlam-function-calling-60k` | tool_use | 🕐 candidat | —/train | — | — | P0. CC BY 4.0 mais dépôt *gated* : l'API taille répond 404 tant que les conditions ne sont pas acceptées. Volume annoncé par la source : 60 000. |
-| `Team-ACE/ToolACE` | tool_use | 🕐 candidat | —/train | 11,300 | 11,300 | P1. Apache-2.0, 26k+ API : diversité de schémas. |
-| `nvidia/When2Call` | tool_use | 🕐 candidat | train_sft/train | 15,000 | 15,000 | P1. Décision d'appel / abstention — indispensable à un petit modèle, qui sur-appelle les outils sans contre-exemples. |
-| `Salesforce/APIGen-MT-5k` | tool_use | ⛔ écarté | —/train | 5,000 | 5,000 | CC BY-NC : exclu du jeu commercial, comme MasakhaNER 2.0. |
+| `miracl/miracl` | retrieval | 🕐 candidat | fr/train | — | — | `TaskType.RETRIEVAL` existe dans le schéma mais aucun converter ne l'alimente : la capacité IR reste à zéro après la v0.2. L'API taille répond 501 (script de chargement) — passer par la branche parquet. |
+| `Salesforce/APIGen-MT-5k` | tool_use | 🕐 candidat | —/train | 5,000 | 5,000 | 5 000 trajectoires multi-tours de référence. Le format multi-tours est désormais supporté (Toucan) : intégrable sans nouveau travail de schéma. |
+| `Salesforce/xlam-function-calling-60k` | tool_use | 🕐 candidat | —/train | — | — | Dépôt *gated* : l'API taille répond 404 tant que les conditions ne sont pas acceptées. Volume annoncé par la source : 60 000 appels exécutés-vérifiés. À débloquer manuellement puis intégrer. |
+| `Agent-Ark/Toucan-1.5M` | tool_use | ✅ intégré | SFT/train | 119,287 | 119,287 |  |
+| `NousResearch/hermes-function-calling-v1` | tool_use | ✅ intégré | func_calling/train | 1,893 | 1,893 |  |
+| `Team-ACE/ToolACE` | tool_use | ✅ intégré | —/train | 11,300 | 11,300 |  |
 | `michsethowusu/Code-170k-wolof` | tool_use | ✅ intégré | —/train | 176,999 | 176,999 |  |
+| `nvidia/When2Call` | tool_use | ✅ intégré | train_sft/train | 15,000 | 15,000 |  |
+| `Alwaly/french-wolof-translation-gs` | translation | ✅ intégré | —/train | 10,372 | 10,372 |  |
+| `MaroneAI/French-Wolof_Translation-Dataset` | translation | ✅ intégré | —/train | 30,002 | 30,002 |  |
+| `MaroneAI/Wolof-to-French_Translation-Dataset` | translation | ✅ intégré | —/train | 30,002 | 30,002 |  |
 | `bilalfaye/english-wolof-french-dataset` | translation | ✅ intégré | —/train | 14,670 | 14,670 |  |
+| `dofbi/jolof` | translation | ✅ intégré | —/train | 12,084 | 12,084 |  |
+| `galsenai/centralized_wolof_french_translation_data` | translation | ✅ intégré | —/train | 98,345 | 98,345 |  |
+| `galsenai/english-wolof-smol-translation` | translation | ✅ intégré | —/train | 7,405 | 7,405 |  |
 | `galsenai/french-wolof-translation` | translation | ✅ intégré | —/train | 17,777 | 17,777 |  |
+| `sudoping01/english-wolof-translation` | translation | ✅ intégré | —/train | 84,709 | 84,709 |  |
 
-> **5,058 lignes disponibles mais non lues** par le build : ce sont
+> **8,145 lignes disponibles mais non lues** par le build : ce sont
 > les splits `validation`/`test` des sources intégrées. Elles constituent
 > la réserve naturelle pour un futur jeu d'évaluation.

@@ -121,3 +121,46 @@ def test_rapport_borne_le_detail_mais_pas_les_compteurs():
     assert rep.counts_by_code()["duplicate"] == 1000
     assert rep.ok is False
     assert "1000 erreurs" in rep.summary()
+
+
+# ════════════════════════════════════════════════════════════════════
+#  Déduplication globale (v0.2) : partagée entre datasets
+# ════════════════════════════════════════════════════════════════════
+def test_dedup_partage_entre_deux_datasets():
+    """Plusieurs corpus de traduction wolof agrègent les mêmes phrases :
+    sans index partagé, le doublon inter-sources passerait."""
+    from galsenai_sft.core.schema import Message, Role, Sample, TaskType
+    from galsenai_sft.validators.quality_validator import filter_quality
+
+    def make(source: str) -> Sample:
+        return Sample(
+            messages=[
+                Message(role=Role.USER, content="Tekkil lii ci wolof: Bonjour"),
+                Message(role=Role.ASSISTANT, content="Salaamaalekum"),
+            ],
+            task=TaskType.TRANSLATION,
+            source=source,
+        )
+
+    shared: set[int] = set()
+    first = list(filter_quality([make("corpus/a")], seen=shared))
+    second = list(filter_quality([make("corpus/b")], seen=shared))
+    assert len(first) == 1
+    assert second == [], "le même contenu venu d'une autre source doit être écarté"
+
+
+def test_dedup_reste_local_sans_index_partage():
+    """Sans `seen`, chaque appel repart d'un index vide (comportement d'origine)."""
+    from galsenai_sft.core.schema import Message, Role, Sample, TaskType
+    from galsenai_sft.validators.quality_validator import filter_quality
+
+    s = Sample(
+        messages=[
+            Message(role=Role.USER, content="q"),
+            Message(role=Role.ASSISTANT, content="r"),
+        ],
+        task=TaskType.QA,
+        source="x",
+    )
+    assert len(list(filter_quality([s]))) == 1
+    assert len(list(filter_quality([s]))) == 1

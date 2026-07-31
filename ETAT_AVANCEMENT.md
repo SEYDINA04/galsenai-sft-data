@@ -3,7 +3,7 @@
 > **But de ce fichier** : reprendre le travail rapidement. Lire ce fichier, puis
 > aller à la section **« PROCHAINE ÉTAPE »**.
 
-_Dernière mise à jour : 2026-07-30 (soir) · Auteur : Babacar Ndao_
+_Dernière mise à jour : 2026-07-31 (nuit) · Auteur : Babacar Ndao_
 _Dépôt : https://github.com/SEYDINA04/galsenai-sft-data (public, branche `main`)_
 
 ---
@@ -41,7 +41,7 @@ testée et poussée sur GitHub. Elle fait les 3 objectifs du brief :
    réel volontairement différé).
 
 **Les 7 lots (0 → 7) sont terminés**, plus un **lot 8 « mémoire »** après
-l'incident du 30/07. 101 tests passent. Le build a été vérifié sur données
+l'incident du 30/07. 133 tests passent. Le build a été vérifié sur données
 réelles.
 
 ---
@@ -53,17 +53,16 @@ réelles.
 | 0 | Squelette : pyproject (uv), ruff, pytest, pre-commit, CI, `core/` (schéma ChatML typé, config, logging, io) | ✅ |
 | 1 | Registry plugin (Open/Closed) + `BaseConverter` + exporters chatml/alpaca/sharegpt + CLI | ✅ |
 | 2 | Validators : schéma, qualité (doublons/vides/longueurs), **LID GlotLID v3 épinglé**, décontamination, stats | ✅ |
-| 3 | **11 converters wolof** (7 tâches) : translation, intent(+slots), ner, classification, qa, instruction, tool_use | ✅ |
+| 3 | **converters wolof** (7 tâches ; 11 en v0.1, **30** en v0.2) : translation, intent(+slots), ner, classification, qa, instruction, tool_use | ✅ |
 | 4 | Metadata : registre + **catalogue auto** (licences, statuts commercial/recherche) | ✅ |
 | 5 | Translators : interface pluggable + QE (LID) + file de revue humaine (moteur réel **différé**) | ✅ |
 | 6 | Builder end-to-end + **manifest** (checksums) + `publish` HF (dry-run) | ✅ |
 | 7 | Docs : architecture, data_flow, contribution_guide, catalogue | ✅ |
 | 8 | **Mémoire** : build en flux, `MemoryGuard`, plafond cgroup, streaming HF, libération du LID | ✅ |
 
-**Datasets intégrés (11)** : voir `docs/dataset_catalog.md`. Couverture :
-traduction (2), intent (2 : INJONGO+slots, WolBanking77), NER (WolofEntityLinking),
-classification (sentiments, emotions, sib200), QA (AfriQA), instruction (WORI),
-tool_use (Code-170k ShareGPT).
+**Datasets intégrés (30 en v0.2, 11 en v0.1)** : voir `docs/dataset_catalog.md`
+et `docs/targeting.md`. Couverture : traduction (9), tool_use (5), classification (4),
+instruction (4), qa (4), intent (2), ner (2).
 
 **Commits poussés** : lots 0→7 (voir `git log`). Correctif annexe dans
 `wolof_scraper` : GlotLID `model.bin` → `model_v3.bin` (déjà poussé).
@@ -131,36 +130,126 @@ d'environ 415 k exemples, bien plus équilibré). **À trancher avant publicatio
 
 ---
 
-## 4. ⚠️ PROCHAINE ÉTAPE (à décider avec toi)
+## 4. 🎯 OBJECTIF v0.2 — rééquilibrer les tâches (fait, partiellement atteint)
 
-**Décisions prises le 30/07 (soir)** :
-- ✅ **Pas de rééquilibrage** : le dataset part avec ses 905 362 exemples
-  (71 % classification). ⚠️ À signaler à l'équipe fine-tuning : **pondérer les
-  tâches à l'entraînement** ou sous-échantillonner à la volée, sinon le modèle
-  optimisera surtout la production d'étiquettes de sentiment. Le levier
-  `max_samples` reste disponible dans `configs/build.yaml` si vous changez d'avis.
-- ✅ **Publié en privé** : <https://huggingface.co/datasets/galsenai/wolof_sft>
-  (v0.1.0 · `data/train.jsonl` 550 Mo · data card avec licences par source).
+**Objectif fixé** : amener chaque tâche au niveau de la classification
+(640 964 exemples en v0.1), en intégrant de nouvelles sources.
 
-Reste à faire :
+### 4.1 Le constat qui change l'objectif
 
-1. **Durcissement machine (à faire par toi, demande `sudo`)** :
+Atteindre 640 964 exemples pour chacune des six autres tâches demanderait
+**3 581 386 exemples supplémentaires**. C'est impossible par sourcing : le
+stock mondial de NER wolof gold est d'environ **6 500 lignes**, celui de QA
+wolof d'environ **3 000**. Aucune recherche ne trouvera 640 000 exemples de QA
+wolof — ils n'existent pas.
+
+L'objectif a donc été tenu **par les deux bouts** : monter les tâches basses
+autant que les sources le permettent, et **plafonner la classification**
+(`max_samples: 60000` sur les deux corpus dominants). Rapprocher les tâches
+uniquement par le haut était mathématiquement exclu.
+
+### 4.2 Sources découvertes (recherche du 31/07)
+
+Recensement programmatique du Hub HuggingFace (685 dépôts scannés) + recherche
+documentaire. **19 nouvelles sources** intégrées, 11 → **30 converters** :
+
+| Tâche | Sources ajoutées |
+|---|---|
+| translation (+7) | `galsenai/centralized_wolof_french_translation_data` (98 345), `sudoping01/english-wolof-translation` (84 709), `MaroneAI/*` (2 × 30 002), `dofbi/jolof` (12 084), `Alwaly/french-wolof-translation-gs` (10 372), `galsenai/english-wolof-smol-translation` (7 405) |
+| instruction (+3) | `bilalfaye/wolof-sft` (61 971), `ngia/alpaca-data-in-wolof` (47 463), `CohereLabs/aya_collection_language_split` wolof (3 146) |
+| tool_use (+4) | `Agent-Ark/Toucan-1.5M` (119 287), `nvidia/When2Call` (15 000), `Team-ACE/ToolACE` (11 300), `NousResearch/hermes-function-calling-v1` (1 893) |
+| ner (+1) | `masakhane/masakhaner2` (4 593) — seul NER wolof gold |
+| qa (+3) | `facebook/belebele` (900), `masakhane/afrimmlu` (500), `masakhane/afrimgsm` (250) |
+| classification (+1) | `masakhane/afrixnli` (600) — inférence textuelle |
+
+### 4.3 ✅ BUILD v0.2 (31/07, 01:04 → 02:03)
+
+| Indicateur | v0.1 | v0.2 |
+|---|---:|---:|
+| Exemples | 905 362 | **985 136** |
+| Datasets | 11 | **30** |
+| Datasets en échec | 0 | **0** |
+| Durée | 26 min | 59 min |
+| Pic mémoire | 2 050 Mo | 2 227 Mo |
+| Sortie ChatML | 1,1 Go | 2,4 Go |
+
+| Tâche | v0.1 | v0.2 | Évolution | Part v0.2 |
+|---|---:|---:|---:|---:|
+| translation | 64 832 | **573 832** | ×8,9 | 58,2 % |
+| tool_use | 176 723 | **206 557** | ×1,2 | 21,0 % |
+| classification | 640 964 | 121 301 | plafonné | 12,3 % |
+| instruction | 6 284 | **60 644** | ×9,6 | 6,2 % |
+| intent | 15 012 | 15 012 | — | 1,5 % |
+| ner | 1 045 | **5 638** | ×5,4 | 0,6 % |
+| qa | 502 | **2 152** | ×4,3 | 0,2 % |
+
+**Trois capacités qui n'existaient pas** apparaissent dans la v0.2 :
+
+| Indicateur | v0.1 | v0.2 |
+|---|---:|---:|
+| Exemples avec `tool_calls` réels | **0** | **184 541** |
+| Conversations multi-tours | **0** | **35 752** |
+| Messages `system` (outils déclarés) | **0** | présents |
+
+La tâche `tool_use` de la v0.1 ne contenait aucun appel d'outil — c'était du
+questions/réponses de code. Elle en contient désormais de vrais, dans quatre
+formats normalisés vers le schéma `ToolCall`.
+
+### 4.4 Ce que la déduplication globale a révélé
+
+La déduplication est passée de **locale à chaque dataset** à **globale au
+build** (index partagé). Effet immédiat et mesurable :
+
+- `ngia/alpaca-data-in-wolof` : 47 463 lignes → **12 284** exemples. Environ
+  34 000 étaient déjà présents via `bilalfaye/wolof-sft`.
+- `CohereLabs/aya_collection_language_split` : 3 146 → **266**. Le sous-ensemble
+  wolof d'Aya est presque entièrement composé d'AfriQA, déjà intégré.
+- Le filtre LID a écarté **20 037 lignes** de `bilalfaye/wolof-sft` (32 %) :
+  ce corpus n'est pas majoritairement wolof.
+
+Sans ces deux garde-fous, la v0.2 aurait annoncé ~55 000 exemples de plus,
+tous faux.
+
+### 4.5 ⚠️ Le déséquilibre a changé de camp
+
+La classification est passée de 70,8 % à 12,3 %. Mais la **traduction occupe
+maintenant 58,2 %** du dataset. On a remplacé un déséquilibre par un autre,
+moins sévère (rapport max/min : 1277:1 → 266:1) mais réel.
+
+Deux raisons de ne pas le corriger tout de suite :
+
+1. l'objectif fixé était d'amener les tâches au niveau de la classification
+   d'origine (640 964) — la traduction y est presque (573 832), c'est le
+   résultat demandé ;
+2. plafonner la traduction jetterait ~400 000 exemples qui viennent d'être
+   acquis, sans que personne n'ait encore dit qu'ils gênent.
+
+**Levier prêt, une ligne** : ajouter `max_samples` aux entrées de traduction
+dans `configs/build.yaml` (à 60 000 chacune, la traduction retomberait à
+~150 000 et le dataset serait équilibré à ±3 % près entre les cinq tâches
+principales).
+
+### 4.6 Reste à faire
+
+1. **Splits train/validation/test** — toujours absents ; c'est le seul point
+   qui empêche toute évaluation interprétable. Aggravé en v0.2 : `belebele`,
+   `afrimmlu`, `afrimgsm` et `afrixnli` étaient des **jeux d'évaluation** et
+   ont été versés dans `train` pour le volume. Il faut soit les en retirer,
+   soit construire un jeu de test wolof natif indépendant.
+2. **Retrieval** : capacité toujours à zéro. Aucune source ne l'apportera —
+   passer par la synthèse sur le corpus de pré-entraînement (SWIM-IR).
+3. **Intent** : plafond mondial atteint (~15 000). Seule voie : localiser
+   MASSIVE (protocole INJONGO) — production de données, pas sourcing.
+4. **`Salesforce/xlam-function-calling-60k`** : dépôt *gated*, accepter les
+   conditions à la main puis relancer (+60 000 appels exécutés-vérifiés).
+5. **Durcissement machine (demande `sudo`)** :
    ```bash
    sudo apt install earlyoom && sudo systemctl enable --now earlyoom
    ```
-   `systemd-oomd` est actif mais ne surveille pas les processus lancés depuis un
-   terminal — c'est pourquoi rien n'a tué le build avant le gel du 30/07.
-2. **Livraison à l'équipe fine-tuning** (Marième, Sophie, Mohamed) : leur donner
-   accès au repo HF privé + les formats Alpaca/ShareGPT (`data/processed/`,
-   non publiés — 483 Mo et 513 Mo).
-3. **Publication publique** : décider quand, et sur quel track — **commercial**
-   (3 sources permissives seulement) vs **recherche** (les 11). 8 sources sur 11
-   sont en licence non vérifiée ou non commerciale.
-4. **Étape 3 (traduction externe)** : choisir un moteur (LLM frontière pivot FR /
-   Google Translate / NLLB) + budget, puis brancher un backend `Translator`.
-5. **Décontamination** : renseigner `pretraining_corpus_paths` dans
-   `configs/settings.yaml` pour le futur jeu d'**évaluation** (jamais sur le jeu
-   d'entraînement : les sources y sont déjà).
+   `systemd-oomd` ne surveille pas les processus lancés depuis un terminal —
+   c'est pourquoi rien n'a tué le build avant le gel du 30/07.
+6. **Étape 3 (traduction externe)** : choisir un moteur + budget, puis brancher
+   un backend `Translator`.
 
 ---
 
@@ -169,7 +258,7 @@ Reste à faire :
 ```bash
 cd galsenai-sft-data
 make setup                    # venv + install
-make test                     # 101 tests
+make test                     # 133 tests
 make doctor                   # état mémoire avant un gros build
 make build-smoke              # build de test (100 lignes/dataset, plafond 4 Go)
 make build                    # build complet SOUS PLAFOND MÉMOIRE  ← à utiliser

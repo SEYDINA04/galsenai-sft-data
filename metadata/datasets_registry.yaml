@@ -19,6 +19,50 @@ datasets:
     license_status: unverified
     commercial_ok: false
 
+  galsenai/centralized_wolof_french_translation_data:
+    source_url: https://huggingface.co/datasets/galsenai/centralized_wolof_french_translation_data
+    license: unverified
+    license_status: unverified
+    notes: "Corpus fr<->wo centralisé GalsenAI — agrège plusieurs sources (colonne `source`)."
+
+  sudoping01/english-wolof-translation:
+    source_url: https://huggingface.co/datasets/sudoping01/english-wolof-translation
+    license: Apache-2.0
+    license_status: permissive
+    commercial_ok: true
+
+  MaroneAI/Wolof-to-French_Translation-Dataset:
+    source_url: https://huggingface.co/datasets/MaroneAI/Wolof-to-French_Translation-Dataset
+    license: MIT
+    license_status: permissive
+    commercial_ok: true
+
+  MaroneAI/French-Wolof_Translation-Dataset:
+    source_url: https://huggingface.co/datasets/MaroneAI/French-Wolof_Translation-Dataset
+    license: MIT
+    license_status: permissive
+    commercial_ok: true
+    notes: "Même corpus que Wolof-to-French, sens inverse — recouvrement attendu."
+
+  Alwaly/french-wolof-translation-gs:
+    source_url: https://huggingface.co/datasets/Alwaly/french-wolof-translation-gs
+    license: unverified
+    license_status: unverified
+    notes: "Colonne `source` = mafand : recouvrement avec MAFAND-MT."
+
+  galsenai/english-wolof-smol-translation:
+    source_url: https://huggingface.co/datasets/galsenai/english-wolof-smol-translation
+    license: unverified
+    license_status: unverified
+    notes: "Dérivé de google/smol (CC-BY-4.0)."
+
+  dofbi/jolof:
+    source_url: https://huggingface.co/datasets/dofbi/jolof
+    license: MIT
+    license_status: permissive
+    commercial_ok: true
+    notes: "Lexique fr<->wo : entrées très courtes (mot à mot)."
+
   # --- Intent ---
   masakhane/InjongoIntent:
     source_url: https://huggingface.co/datasets/masakhane/InjongoIntent
@@ -44,6 +88,13 @@ datasets:
     notes: "NER + entity linking (Wikidata), annoté manuellement."
 
   # --- Classification ---
+  masakhane/afrixnli:
+    source_url: https://huggingface.co/datasets/masakhane/afrixnli
+    license: Apache-2.0
+    license_status: permissive
+    commercial_ok: true
+    notes: "Inférence textuelle (NLI). Split test : jeu d'éval versé au train."
+
   Davlan/sib200:
     source_url: https://huggingface.co/datasets/Davlan/sib200
     license: CC-BY-SA-4.0
@@ -72,6 +123,27 @@ datasets:
     citation: "Ogundepo et al., AfriQA, Findings EMNLP 2023"
     notes: "Licence en conflit (paper CC-BY vs HF NC) — traité en NC par prudence."
 
+  facebook/belebele:
+    source_url: https://huggingface.co/datasets/facebook/belebele
+    license: CC-BY-SA-4.0
+    license_status: permissive
+    commercial_ok: true
+    notes: "Compréhension de lecture (passage FLORES + QCM). Jeu d'éval versé au train."
+
+  masakhane/afrimmlu:
+    source_url: https://huggingface.co/datasets/masakhane/afrimmlu
+    license: Apache-2.0
+    license_status: permissive
+    commercial_ok: true
+    notes: "QCM de connaissances. Jeu d'éval versé au train."
+
+  masakhane/afrimgsm:
+    source_url: https://huggingface.co/datasets/masakhane/afrimgsm
+    license: Apache-2.0
+    license_status: permissive
+    commercial_ok: true
+    notes: "Problèmes de maths rédigés. Jeu d'éval versé au train."
+
   # --- Instruction ---
   m-a-d-i/wori-wolof-instructions:
     source_url: https://huggingface.co/datasets/m-a-d-i/wori-wolof-instructions
@@ -80,6 +152,26 @@ datasets:
     commercial_ok: true
     notes: "WORI — reverse instructions validées (bilingue wo/fr)."
 
+  ngia/alpaca-data-in-wolof:
+    source_url: https://huggingface.co/datasets/ngia/alpaca-data-in-wolof
+    license: Apache-2.0
+    license_status: permissive
+    commercial_ok: true
+    notes: "Alpaca traduit automatiquement — filtre LID actif au build."
+
+  bilalfaye/wolof-sft:
+    source_url: https://huggingface.co/datasets/bilalfaye/wolof-sft
+    license: unverified
+    license_status: unverified
+    notes: "Jeu SFT wolof au format Alpaca — filtre LID actif au build."
+
+  CohereLabs/aya_collection_language_split:
+    source_url: https://huggingface.co/datasets/CohereLabs/aya_collection_language_split
+    license: Apache-2.0
+    license_status: permissive
+    commercial_ok: true
+    notes: "Sous-ensemble wolof de la collection Aya (agrégat multi-jeux)."
+
   # --- Tool use / code ---
   michsethowusu/Code-170k-wolof:
     source_url: https://huggingface.co/datasets/michsethowusu/Code-170k-wolof
@@ -87,3 +179,39 @@ datasets:
     license_status: unverified
     commercial_ok: false
     notes: "Conversations ShareGPT (assistant de code) — signal agentique."
+
+  masakhane/masakhaner2:
+    source_url: https://huggingface.co/datasets/masakhane/masakhaner2
+    license: AFL-3.0
+    license_status: permissive
+    commercial_ok: true
+    citation: "Adelani et al., MasakhaNER 2.0, EMNLP 2022 (arXiv:2210.12391)"
+    notes: "Seul NER wolof gold à cette échelle. Annotations BIO reconstruites en entités."
+
+  # --- Function calling (anglophone : apporte la capacité, pas du wolof) ---
+  Agent-Ark/Toucan-1.5M:
+    source_url: https://huggingface.co/datasets/Agent-Ark/Toucan-1.5M
+    license: Apache-2.0
+    license_status: permissive
+    commercial_ok: true
+    notes: "Trajectoires multi-tours réellement exécutées (MCP). Sous-ensemble SFT."
+
+  nvidia/When2Call:
+    source_url: https://huggingface.co/datasets/nvidia/When2Call
+    license: unverified
+    license_status: unverified
+    notes: "Décision d'appel / abstention — contre-poids au sur-appel d'outils."
+
+  Team-ACE/ToolACE:
+    source_url: https://huggingface.co/datasets/Team-ACE/ToolACE
+    license: Apache-2.0
+    license_status: permissive
+    commercial_ok: true
+    notes: "26k+ API auto-évoluées : diversité de schémas."
+
+  NousResearch/hermes-function-calling-v1:
+    source_url: https://huggingface.co/datasets/NousResearch/hermes-function-calling-v1
+    license: Apache-2.0
+    license_status: permissive
+    commercial_ok: true
+    notes: "Format <tool_call> de référence de l'écosystème."

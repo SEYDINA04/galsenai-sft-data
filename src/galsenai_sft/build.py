@@ -169,12 +169,17 @@ def iter_entry_samples(
     decontam_index: set[str] | None = None,
     limit: int | None = None,
     target_filter: Any | None = None,
+    dedup_index: set[int] | None = None,
 ) -> Iterator[Sample]:
     """Flux de Samples d'un dataset : charge -> convertit -> filtre.
 
     Générateur : aucune liste intermédiaire. ``report`` est mis à jour au fil de
     l'eau (compteurs, erreur éventuelle) — une panne réseau en milieu de dataset
     conserve donc les exemples déjà produits.
+
+    ``dedup_index`` est l'index de déduplication **partagé par tout le build** :
+    plusieurs corpus de traduction wolof agrègent les mêmes phrases, un index
+    par dataset laisserait donc passer les doublons inter-sources.
 
     Deux plafonds distincts :
       - ``limit`` (CLI ``--limit``) : lignes **source** lues, pour un smoke test ;
@@ -200,7 +205,7 @@ def iter_entry_samples(
                 report.n_raw += 1
                 yield row
 
-        stream: Iterator[Sample] = filter_quality(conv.convert(_counted()))
+        stream: Iterator[Sample] = filter_quality(conv.convert(_counted()), seen=dedup_index)
 
         # Filtre LID de la cible wolof (opt-in par dataset : datasets bruités)
         if entry.get("lid_filter") and target_filter is not None:
@@ -323,6 +328,8 @@ def build(
 
     manifest = BuildManifest(version=version, created_at=datetime.now(UTC).isoformat())
     stats = StatisticsAccumulator()
+    # Déduplication globale : partagée par tous les datasets du plan.
+    dedup_index: set[int] = set()
     sink = SampleSink(settings, export_formats)
     log.info("build v%s — %s", version, describe_environment())
 
@@ -337,7 +344,7 @@ def build(
                 manifest.entries.append(report)
 
                 for sample in iter_entry_samples(
-                    entry, loader, report, decontam_index, limit, target_filter
+                    entry, loader, report, decontam_index, limit, target_filter, dedup_index
                 ):
                     guard.check()  # arrêt propre si la mémoire système s'effondre
                     sink.write(sample)
