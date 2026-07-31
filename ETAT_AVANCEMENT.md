@@ -41,7 +41,7 @@ testée et poussée sur GitHub. Elle fait les 3 objectifs du brief :
    réel volontairement différé).
 
 **Les 7 lots (0 → 7) sont terminés**, plus un **lot 8 « mémoire »** après
-l'incident du 30/07. 68 tests passent. Le build a été vérifié sur données
+l'incident du 30/07. 101 tests passent. Le build a été vérifié sur données
 réelles.
 
 ---
@@ -169,7 +169,7 @@ Reste à faire :
 ```bash
 cd galsenai-sft-data
 make setup                    # venv + install
-make test                     # 68 tests
+make test                     # 101 tests
 make doctor                   # état mémoire avant un gros build
 make build-smoke              # build de test (100 lignes/dataset, plafond 4 Go)
 make build                    # build complet SOUS PLAFOND MÉMOIRE  ← à utiliser
@@ -188,6 +188,8 @@ build : `uv run galsenai-sft build` fonctionne aussi mais sans plafond cgroup.
 |---|---|
 | Schéma canonique | `src/galsenai_sft/core/schema.py` |
 | Ajouter un dataset | `docs/contribution_guide.md` |
+| **Ciblage (retenus / écartés)** | `docs/targeting.md`, `metadata/candidates.yaml` |
+| **Volume disponible par tâche** | `docs/inventory.md` (`galsenai-sft inventory`) |
 | **Mémoire (protections)** | `docs/architecture.md` |
 | Garde-fou mémoire | `src/galsenai_sft/core/memory.py` |
 | Plan de build | `configs/build.yaml` |

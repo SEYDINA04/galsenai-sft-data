@@ -15,6 +15,11 @@ externes vers le wolof — le tout de façon modulaire, testable et reproductibl
 - **Data extraction** : NER, Information Retrieval, Intent Classification, QA
 - **Tool use** (agentique) : function calling
 
+Le raisonnement de sélection — critères, sources retenues, **sources écartées et
+pourquoi** — est dans [`docs/targeting.md`](docs/targeting.md). Les volumes
+disponibles par tâche, mesurés à la source sans rien télécharger, sont dans
+[`docs/inventory.md`](docs/inventory.md) (`galsenai-sft inventory`).
+
 ## Format canonique : ChatML
 
 La représentation interne est un `Sample` typé (pydantic) — une conversation
@@ -67,7 +72,8 @@ le pointeur mouvant `model.bin`, pour garantir la reproductibilité.
 ## Licence
 
 Code sous licence **MIT**. Chaque dataset source conserve sa licence d'origine
-(voir `metadata/licenses.yaml`).
+(voir [`docs/dataset_catalog.md`](docs/dataset_catalog.md), généré depuis
+`metadata/datasets_registry.yaml`).
 
 ---
 

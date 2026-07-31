@@ -10,7 +10,7 @@ les décisions de conception.
 | **Modulaire** | Chaque responsabilité dans un sous-package (`core`, `converters`, `validators`, `translators`, `exporters`, `metadata`). |
 | **Extensible (Open/Closed)** | Ajouter un dataset = 1 converter décoré `@register`, **sans** modifier le pipeline. Idem pour un backend LID ou de traduction (Protocols). |
 | **Reproductible** | GlotLID **v3 épinglé** ; build **manifest** avec checksums SHA-256 ; seeds déterministes dans les converters. |
-| **Testable** | Loader et backends injectables → tests sans réseau ni GPU. 68 tests unitaires. |
+| **Testable** | Loader et backends injectables → tests sans réseau ni GPU. 101 tests unitaires. |
 | **Typé / validable** | Tout passe par des modèles **pydantic** (`Sample`, `DatasetMeta`, `BuildManifest`…). |
 | **Documenté** | Docstrings systématiques + `docs/` + catalogue auto-généré. |
 
@@ -35,6 +35,10 @@ use).
 ## 3. Vue des composants
 
 ```
+   ┌──────────────┐
+   │ inventory.py │  API HF /size — volume disponible par tâche, AVANT build
+   └──────┬───────┘  (configs/build.yaml + metadata/candidates.yaml)
+          ▼
                          ┌──────────────┐
    dataset HF (brut) ──▶ │   Loader     │  (HFLoader | injectable)
                          └──────┬───────┘
@@ -73,6 +77,7 @@ use).
 | `translators` | Traduction pluggable + QE + review | texte | `ReviewItem` | (backend*) |
 | `metadata` | Registre + catalogue | registry.yaml | `DatasetMeta`, catalogue.md | core |
 | `loaders` | Chargement des datasets (injectable) | dataset_id | `Iterable[dict]` | datasets* |
+| `inventory` | Volume disponible par tâche **avant** build (sonde injectable) | plan + candidats | `Inventory`, inventory.md | — |
 | `build` | Orchestration end-to-end | plan | manifest + artefacts | tout |
 | `publish` | Data card + upload HF | manifest | dataset HF | huggingface_hub* |
 

@@ -23,21 +23,44 @@ def load_registry(path: Path | None = None) -> dict[str, DatasetMeta]:
     """Charge le registre : 1 DatasetMeta par converter enregistré.
 
     Les valeurs du YAML surchargent les valeurs par défaut ; la tâche est
-    toujours prise du converter (le code fait foi).
+    toujours prise du converter (le code fait foi). Si un inventaire existe
+    (``metadata/inventory.json``, produit par ``galsenai-sft inventory``), les
+    volumes disponibles à la source y sont repris — sinon ``n_samples`` reste
+    ``None`` et le catalogue affiche ``—``.
     """
     path = path or get_settings().paths.datasets_registry
     raw: dict = {}
     if path.exists():
         raw = (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("datasets", {}) or {}
 
+    volumes = _source_volumes()
     out: dict[str, DatasetMeta] = {}
     for dataset_id in available():
         cls = get_converter(dataset_id)
         entry = dict(raw.get(dataset_id, {}))
         entry["dataset_id"] = dataset_id
         entry["task"] = cls.task.value  # le converter fait foi
+        if (n := volumes.get(dataset_id)) is not None:
+            entry.setdefault("n_samples", n)
         out[dataset_id] = DatasetMeta.model_validate(entry)
     return out
+
+
+def _source_volumes() -> dict[str, int]:
+    """Volumes mesurés à la source, depuis l'inventaire s'il a été généré.
+
+    Import local et tolérant : le catalogue doit rester générable sans réseau
+    et sans inventaire préalable.
+    """
+    try:
+        from galsenai_sft.inventory import load_inventory
+
+        inv = load_inventory()
+    except Exception:  # pragma: no cover - inventaire illisible
+        return {}
+    if inv is None:
+        return {}
+    return {s.dataset_id: s.n_targeted for s in inv.sources if s.n_targeted is not None}
 
 
 def render_catalog(registry: dict[str, DatasetMeta]) -> str:
@@ -49,7 +72,14 @@ def render_catalog(registry: dict[str, DatasetMeta]) -> str:
         "",
         f"**{len(registry)} datasets** intégrés.",
         "",
-        "| dataset | tâche | licence | commercial | statut | exemples |",
+        "La colonne *lignes source* provient de `galsenai-sft inventory` (mesure à",
+        "la source, sans téléchargement). Ce n'est **pas** le nombre d'exemples SFT",
+        "produits : un converter peut en générer plusieurs par ligne (traduction",
+        "bidirectionnelle) ou moins (déduplication, filtre LID). Voir",
+        "[`inventory.md`](inventory.md) pour le volume par tâche et les sources",
+        "ciblées mais non intégrées.",
+        "",
+        "| dataset | tâche | licence | commercial | statut | lignes source |",
         "|---|---|---|:---:|---|---:|",
     ]
     for ds, m in sorted(registry.items(), key=lambda kv: (kv[1].task, kv[0])):

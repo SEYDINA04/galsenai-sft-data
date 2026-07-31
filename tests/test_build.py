@@ -122,7 +122,7 @@ def test_datacard_generation():
         )
     card = build_datacard(manifest, "galsenai/wolof_sft")
     assert "galsenai/wolof_sft" in card
-    assert "Répartition par tâche" in card
+    assert "## Tâches" in card
     assert "translation" in card
 
 

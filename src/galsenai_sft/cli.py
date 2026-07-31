@@ -96,6 +96,49 @@ def validate(
 
 
 @app.command()
+def inventory(
+    json_out: Path = typer.Option(None, "--json", help="défaut: metadata/inventory.json"),
+    md_out: Path = typer.Option(None, "--md", help="défaut: docs/inventory.md"),
+) -> None:
+    """Quantifie le volume **disponible par tâche**, à la source, avant tout build.
+
+    Interroge l'API ``datasets-server`` de HuggingFace (aucun téléchargement) pour
+    les datasets du plan de build **et** ceux de ``metadata/candidates.yaml``
+    (ciblés mais non intégrés). Répond à « combien de NER / de traduction
+    a-t-on ? » sans payer un build complet.
+    """
+    from galsenai_sft.inventory import build_inventory, write_inventory
+
+    console.print("[cyan]interrogation de HuggingFace…[/cyan]")
+    inv = build_inventory()
+
+    table = Table("tâche", "sources", "intégré", "candidat", "écarté", title="Volume disponible")
+    for task, tv in inv.by_task.items():
+        table.add_row(
+            task,
+            str(tv.n_sources),
+            f"{tv.n_integrated_rows:,}",
+            f"{tv.n_candidate_rows:,}",
+            f"{tv.n_excluded_rows:,}",
+        )
+    table.add_row(
+        "[bold]total[/bold]",
+        f"[bold]{len(inv.sources)}[/bold]",
+        f"[bold]{inv.total_integrated:,}[/bold]",
+        "",
+        "",
+    )
+    console.print(table)
+
+    if failed := [s for s in inv.sources if s.error]:
+        for s in failed:
+            console.print(f"[yellow]⚠[/yellow] {s.dataset_id} : {s.error}")
+
+    jp, mp = write_inventory(inv, json_path=json_out, md_path=md_out)
+    console.print(f"[green]✓[/green] inventaire écrit -> {jp} · {mp}")
+
+
+@app.command()
 def stats(
     inp: Path = typer.Argument(..., help="JSONL de Samples"),
 ) -> None:
@@ -221,9 +264,7 @@ def publish(
     manifest = BuildManifest.model_validate(json.loads(manifest_path.read_text()))
     chatml_all = settings.paths.processed_chatml / "all.jsonl"
 
-    result = run_publish(
-        manifest, chatml_all, repo=repo, dry_run=not execute, card_only=card_only
-    )
+    result = run_publish(manifest, chatml_all, repo=repo, dry_run=not execute, card_only=card_only)
     console.print(result)
 
 

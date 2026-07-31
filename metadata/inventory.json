@@ -1,0 +1,283 @@
+{
+  "created_at": "2026-07-31T00:18:52.838294+00:00",
+  "sources": [
+    {
+      "dataset_id": "galsenai/french-wolof-translation",
+      "task": "translation",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 17777,
+      "n_all_splits": 17777,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "bilalfaye/english-wolof-french-dataset",
+      "task": "translation",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 14670,
+      "n_all_splits": 14670,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "masakhane/InjongoIntent",
+      "task": "intent",
+      "status": "integrated",
+      "config": "wol",
+      "split": "train",
+      "n_targeted": 2240,
+      "n_all_splits": 3198,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "karim155/WolBanking77",
+      "task": "intent",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 11832,
+      "n_all_splits": 14791,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "mbaye930/WolofEntityLinking",
+      "task": "ner",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 1045,
+      "n_all_splits": 1045,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "Davlan/sib200",
+      "task": "classification",
+      "status": "integrated",
+      "config": "wol_Latn",
+      "split": "train",
+      "n_targeted": 701,
+      "n_all_splits": 1004,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "michsethowusu/wolof-sentiments-corpus",
+      "task": "classification",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 320609,
+      "n_all_splits": 320609,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "michsethowusu/wolof-emotions-corpus",
+      "task": "classification",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 320611,
+      "n_all_splits": 320611,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "masakhane/afriqa",
+      "task": "qa",
+      "status": "integrated",
+      "config": "wol",
+      "split": "train",
+      "n_targeted": 503,
+      "n_all_splits": 1341,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "m-a-d-i/wori-wolof-instructions",
+      "task": "instruction",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 3724,
+      "n_all_splits": 3724,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "michsethowusu/Code-170k-wolof",
+      "task": "tool_use",
+      "status": "integrated",
+      "config": null,
+      "split": "train",
+      "n_targeted": 176999,
+      "n_all_splits": 176999,
+      "reason": "",
+      "error": null
+    },
+    {
+      "dataset_id": "masakhane/masakhaner2",
+      "task": "ner",
+      "status": "excluded",
+      "config": "wol",
+      "split": "train",
+      "n_targeted": 4593,
+      "n_all_splits": 6561,
+      "reason": "Seul NER wolof gold annoté humainement, mais CC BY-NC : incompatible avec un jeu utilisable en commercial. Réservé à un futur track recherche.",
+      "error": null
+    },
+    {
+      "dataset_id": "ngia/alpaca-data-in-wolof",
+      "task": "instruction",
+      "status": "excluded",
+      "config": null,
+      "split": "train",
+      "n_targeted": 47463,
+      "n_all_splits": 47463,
+      "reason": "Traduction automatique non auditée. Le ciblage impose de ne jamais utiliser de MT non vérifiée comme donnée gold ; à réintégrer seulement après audit LID + qualité (cf. le filtre appliqué à WORI).",
+      "error": null
+    },
+    {
+      "dataset_id": "Agent-Ark/Toucan-1.5M",
+      "task": "tool_use",
+      "status": "candidate",
+      "config": "SFT",
+      "split": "train",
+      "n_targeted": 119287,
+      "n_all_splits": 119287,
+      "reason": "P0. Apache-2.0, trajectoires multi-tours réellement exécutées (MCP). Choix par défaut pour introduire du vrai function calling.",
+      "error": null
+    },
+    {
+      "dataset_id": "NousResearch/hermes-function-calling-v1",
+      "task": "tool_use",
+      "status": "candidate",
+      "config": "func_calling",
+      "split": "train",
+      "n_targeted": 1893,
+      "n_all_splits": 1893,
+      "reason": "P0. Apache-2.0. Verrouille le format <tool_call> de l'écosystème.",
+      "error": null
+    },
+    {
+      "dataset_id": "nvidia/When2Call",
+      "task": "tool_use",
+      "status": "candidate",
+      "config": "train_sft",
+      "split": "train",
+      "n_targeted": 15000,
+      "n_all_splits": 15000,
+      "reason": "P1. Décision d'appel / abstention — indispensable à un petit modèle, qui sur-appelle les outils sans contre-exemples.",
+      "error": null
+    },
+    {
+      "dataset_id": "Team-ACE/ToolACE",
+      "task": "tool_use",
+      "status": "candidate",
+      "config": null,
+      "split": "train",
+      "n_targeted": 11300,
+      "n_all_splits": 11300,
+      "reason": "P1. Apache-2.0, 26k+ API : diversité de schémas.",
+      "error": null
+    },
+    {
+      "dataset_id": "Salesforce/xlam-function-calling-60k",
+      "task": "tool_use",
+      "status": "candidate",
+      "config": null,
+      "split": "train",
+      "n_targeted": null,
+      "n_all_splits": null,
+      "reason": "P0. CC BY 4.0 mais dépôt *gated* : l'API taille répond 404 tant que les conditions ne sont pas acceptées. Volume annoncé par la source : 60 000.",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "dataset_id": "Salesforce/APIGen-MT-5k",
+      "task": "tool_use",
+      "status": "excluded",
+      "config": null,
+      "split": "train",
+      "n_targeted": 5000,
+      "n_all_splits": 5000,
+      "reason": "CC BY-NC : exclu du jeu commercial, comme MasakhaNER 2.0.",
+      "error": null
+    },
+    {
+      "dataset_id": "miracl/miracl",
+      "task": "retrieval",
+      "status": "candidate",
+      "config": "fr",
+      "split": "train",
+      "n_targeted": null,
+      "n_all_splits": null,
+      "reason": "P1. Apache-2.0. `TaskType.RETRIEVAL` existe dans le schéma mais aucun converter ne l'alimente : la capacité IR est à zéro aujourd'hui.",
+      "error": "HTTPError: HTTP Error 501: Not Implemented"
+    }
+  ],
+  "by_task": {
+    "classification": {
+      "task": "classification",
+      "n_sources": 3,
+      "n_integrated_rows": 641921,
+      "n_candidate_rows": 0,
+      "n_excluded_rows": 0
+    },
+    "instruction": {
+      "task": "instruction",
+      "n_sources": 2,
+      "n_integrated_rows": 3724,
+      "n_candidate_rows": 0,
+      "n_excluded_rows": 47463
+    },
+    "intent": {
+      "task": "intent",
+      "n_sources": 2,
+      "n_integrated_rows": 14072,
+      "n_candidate_rows": 0,
+      "n_excluded_rows": 0
+    },
+    "ner": {
+      "task": "ner",
+      "n_sources": 2,
+      "n_integrated_rows": 1045,
+      "n_candidate_rows": 0,
+      "n_excluded_rows": 4593
+    },
+    "qa": {
+      "task": "qa",
+      "n_sources": 1,
+      "n_integrated_rows": 503,
+      "n_candidate_rows": 0,
+      "n_excluded_rows": 0
+    },
+    "retrieval": {
+      "task": "retrieval",
+      "n_sources": 1,
+      "n_integrated_rows": 0,
+      "n_candidate_rows": 0,
+      "n_excluded_rows": 0
+    },
+    "tool_use": {
+      "task": "tool_use",
+      "n_sources": 7,
+      "n_integrated_rows": 176999,
+      "n_candidate_rows": 147480,
+      "n_excluded_rows": 5000
+    },
+    "translation": {
+      "task": "translation",
+      "n_sources": 2,
+      "n_integrated_rows": 32447,
+      "n_candidate_rows": 0,
+      "n_excluded_rows": 0
+    }
+  }
+}

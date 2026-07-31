@@ -1,0 +1,96 @@
+# ═══════════════════════════════════════════════════════════════════
+#  candidates.yaml — datasets CIBLÉS mais absents du build.
+#
+#  Complète `configs/build.yaml` (ce qui entre) par ce qui n'entre pas, et
+#  pourquoi. Sans ce fichier, le périmètre du dataset serait une liste plate
+#  de 11 identifiants sans justification : l'exclusion d'une source est une
+#  décision, elle doit être tracée au même titre que l'inclusion.
+#
+#  `galsenai-sft inventory` mesure ces datasets à la source (API HuggingFace)
+#  au même titre que ceux du build : on sait donc combien de données on
+#  renonce à utiliser, tâche par tâche.
+#
+#  status:
+#    excluded  — écarté, décision prise (motif obligatoire)
+#    candidate — retenu par le ciblage, converter pas encore écrit
+#
+#  Méthodologie et sources : docs/targeting.md
+# ═══════════════════════════════════════════════════════════════════
+datasets:
+  # ───────────────────────────── Wolof natif ─────────────────────────────
+  - id: masakhane/masakhaner2
+    task: ner
+    config: wol
+    split: train
+    status: excluded
+    reason: >-
+      Seul NER wolof gold annoté humainement, mais CC BY-NC : incompatible avec
+      un jeu utilisable en commercial. Réservé à un futur track recherche.
+
+  - id: ngia/alpaca-data-in-wolof
+    task: instruction
+    split: train
+    status: excluded
+    reason: >-
+      Traduction automatique non auditée. Le ciblage impose de ne jamais
+      utiliser de MT non vérifiée comme donnée gold ; à réintégrer seulement
+      après audit LID + qualité (cf. le filtre appliqué à WORI).
+
+  # ──────────────────── Tool use — famille B (P0/P1) ────────────────────
+  # Aucun tool-calling réel n'est présent dans le dataset actuel : la tâche
+  # `tool_use` ne contient aujourd'hui que du Q/R de code traduit. Ces sources
+  # sont la trajectoire de rattrapage.
+  - id: Agent-Ark/Toucan-1.5M
+    task: tool_use
+    config: SFT
+    split: train
+    status: candidate
+    reason: >-
+      P0. Apache-2.0, trajectoires multi-tours réellement exécutées (MCP).
+      Choix par défaut pour introduire du vrai function calling.
+
+  - id: NousResearch/hermes-function-calling-v1
+    task: tool_use
+    config: func_calling
+    split: train
+    status: candidate
+    reason: "P0. Apache-2.0. Verrouille le format <tool_call> de l'écosystème."
+
+  - id: nvidia/When2Call
+    task: tool_use
+    config: train_sft
+    split: train
+    status: candidate
+    reason: >-
+      P1. Décision d'appel / abstention — indispensable à un petit modèle, qui
+      sur-appelle les outils sans contre-exemples.
+
+  - id: Team-ACE/ToolACE
+    task: tool_use
+    split: train
+    status: candidate
+    reason: "P1. Apache-2.0, 26k+ API : diversité de schémas."
+
+  - id: Salesforce/xlam-function-calling-60k
+    task: tool_use
+    split: train
+    status: candidate
+    reason: >-
+      P0. CC BY 4.0 mais dépôt *gated* : l'API taille répond 404 tant que les
+      conditions ne sont pas acceptées. Volume annoncé par la source : 60 000.
+
+  - id: Salesforce/APIGen-MT-5k
+    task: tool_use
+    split: train
+    status: excluded
+    reason: "CC BY-NC : exclu du jeu commercial, comme MasakhaNER 2.0."
+
+  # ───────────────────────── Retrieval (gap total) ─────────────────────────
+  - id: miracl/miracl
+    task: retrieval
+    config: fr
+    split: train
+    status: candidate
+    reason: >-
+      P1. Apache-2.0. `TaskType.RETRIEVAL` existe dans le schéma mais aucun
+      converter ne l'alimente : la capacité IR est à zéro aujourd'hui.

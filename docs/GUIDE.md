@@ -64,20 +64,26 @@ et en ShareGPT — automatiquement.
 | **Instruction** | consigne wolof → texte wolof |
 | **Code / outils** | conversation assistant de programmation |
 
-La liste complète (avec licences) est dans `docs/dataset_catalog.md`.
+La liste complète (avec licences) est dans `docs/dataset_catalog.md`. Le
+**pourquoi** de cette liste — critères, sources écartées et motifs — est dans
+`docs/targeting.md`, et les volumes disponibles par tâche dans
+`docs/inventory.md`.
 
 ---
 
-## 5. Comment on l'utilise (3 commandes)
+## 5. Comment on l'utilise (4 commandes)
 
 ```bash
-# 1. Voir les datasets disponibles
+# 1. Voir combien de données existent, par tâche, avant de rien télécharger
+galsenai-sft inventory
+
+# 2. Voir les datasets disponibles
 galsenai-sft converters
 
-# 2. Construire le dataset SFT complet (sous plafond mémoire : voir §6 bis)
+# 3. Construire le dataset SFT complet (sous plafond mémoire : voir §6 bis)
 make build
 
-# 3. Le préparer pour HuggingFace (test d'abord, puis réel)
+# 4. Le préparer pour HuggingFace (test d'abord, puis réel)
 galsenai-sft publish              # aperçu (ne publie rien)
 galsenai-sft publish --execute    # publie vraiment (supervisé)
 ```
@@ -134,7 +140,7 @@ prendre ensemble.
 
 - **Ajouter un nouveau dataset = écrire ~15 lignes** (un « converter »), sans
   rien casser d'autre (principe Open/Closed).
-- **Tout est testé** (68 tests automatiques) et vérifié à chaque modification (CI).
+- **Tout est testé** (101 tests automatiques) et vérifié à chaque modification (CI).
 - **Reproductible** : chaque build produit un « manifest » avec des empreintes
   (checksums) — on peut refaire exactement le même dataset plus tard.
 - **Documenté** : architecture, flux de données, guide de contribution.
