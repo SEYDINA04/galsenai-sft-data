@@ -12,6 +12,10 @@
 #  Objectif de la v0.2 : rapprocher chaque tâche du volume de la
 #  classification. Les deux corpus de classification sont désormais plafonnés
 #  (`max_samples`) et les autres tâches élargies — cf. ETAT_AVANCEMENT §4.
+#
+#  Ce fichier décrit le jeu d'ENTRAÎNEMENT uniquement. Les benchmarks
+#  (belebele, afrimmlu, afrimgsm, afrixnli) sont dans `configs/eval.yaml`.
+#
 #  Ciblage et sources écartées : docs/targeting.md
 # ═══════════════════════════════════════════════════════════════════
 datasets:
@@ -46,13 +50,10 @@ datasets:
   - { id: mbaye930/WolofEntityLinking, split: train }
 
   # ───────────────────────── QA ─────────────────────────
-  # belebele / afrimmlu / afrimgsm n'ont pas de split train : on prend leurs
-  # splits d'origine. Arbitrage assumé (volume contre évaluabilité), signalé
-  # dans la data card.
+  # belebele / afrimmlu / afrimgsm sont des BENCHMARKS : ils vivent dans
+  # configs/eval.yaml, pas ici. Les verser dans le train rendrait tout score
+  # publié sans valeur.
   - { id: masakhane/afriqa, split: train, config: wol }
-  - { id: facebook/belebele, split: test, config: wol_Latn }
-  - { id: masakhane/afrimmlu, split: test, config: wol }
-  - { id: masakhane/afrimgsm, split: test, config: wol }
 
   # ───────────────────────── Classification ─────────────────────────
   # ⚠️ Plafond : sentiments + émotions pesaient 640k sur 905k (71 %). Les
@@ -61,7 +62,7 @@ datasets:
   - { id: michsethowusu/wolof-sentiments-corpus, split: train, max_samples: 60000 }
   - { id: michsethowusu/wolof-emotions-corpus, split: train, max_samples: 60000 }
   - { id: Davlan/sib200, split: train, config: wol_Latn }
-  - { id: masakhane/afrixnli, split: test, config: wol }
+  # afrixnli : benchmark également, cf. configs/eval.yaml
 
   # ───────────────────────── Tool use ─────────────────────────
   # Code-170k = Q/R de code (pas d'appel d'outil) : plafonné pour laisser la

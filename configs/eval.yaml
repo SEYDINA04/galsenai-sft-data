@@ -1,0 +1,34 @@
+# ═══════════════════════════════════════════════════════════════════
+#  eval.yaml — jeu d'ÉVALUATION, tenu à l'écart du jeu d'entraînement.
+#
+#  Ces quatre sources sont des **benchmarks** : elles n'existent que pour
+#  noter des modèles, et servent de référence commune dans la littérature sur
+#  les langues africaines. Les verser dans `train` rendrait tout score publié
+#  sans valeur — le modèle répondrait de mémoire.
+#
+#  Construction (l'ordre compte : le train doit exister d'abord) :
+#
+#      galsenai-sft build --plan configs/eval.yaml --split test \
+#          --exclude-from data/processed/chatml/all.jsonl
+#
+#  `--exclude-from` amorce l'index de déduplication avec le jeu
+#  d'entraînement : aucun exemple d'entraînement ne peut se retrouver ici.
+#
+#  ⚠️ Reste une limite que ce fichier ne corrige pas : le corpus de
+#  pré-entraînement du projet contient déjà, en texte brut, plusieurs des
+#  phrases sources. Un score sur ce jeu reste optimiste. La mesure vraiment
+#  propre demande un jeu de test wolof **natif**, écrit pour l'occasion et
+#  jamais publié — voir ETAT_AVANCEMENT §4.6.
+# ═══════════════════════════════════════════════════════════════════
+datasets:
+  # Compréhension de lecture (passage FLORES + QCM à 4 options).
+  - { id: facebook/belebele, split: test, config: wol_Latn }
+
+  # Connaissances scolaires (QCM).
+  - { id: masakhane/afrimmlu, split: test, config: wol }
+
+  # Problèmes de mathématiques rédigés.
+  - { id: masakhane/afrimgsm, split: test, config: wol }
+
+  # Inférence textuelle (implication / neutre / contradiction).
+  - { id: masakhane/afrixnli, split: test, config: wol }

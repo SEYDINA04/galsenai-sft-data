@@ -50,6 +50,20 @@ def _rel(path: Path) -> str:
         return str(path)
 
 
+def _fingerprints_of(path: Path) -> set[int]:
+    """Empreintes 64 bits de tous les Samples d'un JSONL déjà construit.
+
+    Relit le fichier ligne à ligne (mémoire bornée) : sert à interdire à un
+    jeu d'évaluation de reprendre un exemple vu à l'entraînement.
+    """
+    from galsenai_sft.core.io import read_samples_jsonl
+    from galsenai_sft.validators.quality_validator import sample_fingerprint
+
+    if not path.exists():
+        raise FileNotFoundError(f"anti-fuite : {path} introuvable")
+    return {int(sample_fingerprint(s)[:16], 16) for s in read_samples_jsonl(path)}
+
+
 class BuildEntryReport(BaseModel):
     dataset_id: str
     task: str
@@ -120,8 +134,14 @@ class SampleSink:
       - ``alpaca/all.jsonl``, ``sharegpt/all.jsonl`` : formats dérivés.
     """
 
-    def __init__(self, settings: Settings, export_formats: tuple[str, ...]) -> None:
-        self._chatml_dir = settings.paths.processed_chatml
+    def __init__(
+        self, settings: Settings, export_formats: tuple[str, ...], split_name: str = "train"
+    ) -> None:
+        # Un split autre que `train` écrit dans son propre sous-répertoire :
+        # un jeu d'évaluation ne doit jamais pouvoir écraser le jeu
+        # d'entraînement par simple oubli d'une option.
+        sub = "" if split_name == "train" else split_name
+        self._chatml_dir = settings.paths.processed_chatml / sub
         self._to_chatml = get_exporter("chatml")
         self._all = _JsonlWriter(self._chatml_dir / "all.jsonl")
         self._task_writers: dict[str, _JsonlWriter] = {}
@@ -129,7 +149,7 @@ class SampleSink:
         for fmt in export_formats:
             if fmt == "chatml":
                 continue
-            out_dir: Path = getattr(settings.paths, f"processed_{fmt}")
+            out_dir: Path = getattr(settings.paths, f"processed_{fmt}") / sub
             self._exports[fmt] = (_JsonlWriter(out_dir / "all.jsonl"), get_exporter(fmt))
 
     def write(self, sample: Sample) -> None:
@@ -299,6 +319,8 @@ def build(
     decontaminate_corpus: bool = False,
     export_formats: tuple[str, ...] = ("chatml", "alpaca", "sharegpt"),
     guard: MemoryGuard | None = None,
+    split_name: str = "train",
+    exclude_from: Path | None = None,
 ) -> BuildManifest:
     """Exécute le build complet et écrit les artefacts. Retourne le manifest.
 
@@ -306,6 +328,14 @@ def build(
     mémoire (ou de ``Ctrl-C``), les fichiers sont fermés proprement et le
     manifest est écrit avec ``partial=True`` — les données déjà produites
     restent exploitables.
+
+    ``split_name`` isole les sorties d'un jeu qui n'est pas le jeu
+    d'entraînement (``data/processed/<format>/<split>/``).
+
+    ``exclude_from`` amorce l'index de déduplication avec le contenu d'un
+    dataset déjà construit : c'est la garantie **anti-fuite** d'un jeu
+    d'évaluation. Sans elle, un exemple présent dans ``train`` pourrait
+    réapparaître dans ``test``, et le score mesuré ne vaudrait rien.
     """
     plan = plan if plan is not None else load_build_plan()
     settings = settings or get_settings()
@@ -330,7 +360,14 @@ def build(
     stats = StatisticsAccumulator()
     # Déduplication globale : partagée par tous les datasets du plan.
     dedup_index: set[int] = set()
-    sink = SampleSink(settings, export_formats)
+    if exclude_from is not None:
+        dedup_index = _fingerprints_of(exclude_from)
+        log.info(
+            "anti-fuite : %s empreintes chargées depuis %s",
+            f"{len(dedup_index):,}",
+            _rel(exclude_from),
+        )
+    sink = SampleSink(settings, export_formats, split_name=split_name)
     log.info("build v%s — %s", version, describe_environment())
 
     # Index de la dernière entrée nécessitant le LID : au-delà, le modèle
@@ -376,11 +413,12 @@ def build(
     manifest.peak_rss_mb = round(guard.peak_rss_mb, 1)
 
     # --- Statistiques + manifest ---
-    stats_path = settings.paths.interim / "build_stats.json"
+    suffix = "" if split_name == "train" else f"_{split_name}"
+    stats_path = settings.paths.interim / f"build_stats{suffix}.json"
     stats_path.parent.mkdir(parents=True, exist_ok=True)
     stats_path.write_text(stats.result().model_dump_json(indent=2), encoding="utf-8")
 
-    manifest_path = settings.paths.interim / "build_manifest.json"
+    manifest_path = settings.paths.interim / f"build_manifest{suffix}.json"
     manifest_path.write_text(manifest.model_dump_json(indent=2), encoding="utf-8")
     log.info(
         "build terminé : %d samples · pic RSS %.0f Mo -> manifest %s",

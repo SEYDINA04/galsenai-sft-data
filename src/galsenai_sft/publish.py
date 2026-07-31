@@ -68,6 +68,17 @@ def _load_stats() -> dict:
         return {}
 
 
+def _eval_manifest() -> BuildManifest | None:
+    """Manifest du jeu d'évaluation, s'il a été construit."""
+    path = get_settings().paths.interim / "build_manifest_test.json"
+    if not path.exists():
+        return None
+    try:
+        return BuildManifest.model_validate(json.loads(path.read_text(encoding="utf-8")))
+    except (OSError, ValueError):  # pragma: no cover - manifest corrompu
+        return None
+
+
 def build_datacard(manifest: BuildManifest, repo: str) -> str:
     """Génère la data card (README) du dataset SFT à partir du manifest.
 
@@ -87,6 +98,7 @@ def build_datacard(manifest: BuildManifest, repo: str) -> str:
     # Les langues déclarées suivent la réalité mesurée : les jeux de function
     # calling sont anglophones, l'omettre rendrait l'en-tête faux.
     languages = sorted(stats.get("by_prompt_lang", {}) or {"wo": 1}, key=lambda k: k != "wo")
+    evaluation = _eval_manifest()
 
     lines = [
         "---",
@@ -104,6 +116,11 @@ def build_datacard(manifest: BuildManifest, repo: str) -> str:
         "  data_files:",
         "  - split: train",
         "    path: data/train.jsonl",
+        *(
+            ["  - split: test", "    path: data/test.jsonl"]
+            if evaluation and evaluation.total_samples
+            else []
+        ),
         "---",
         "",
         f"# {repo}",
@@ -117,8 +134,14 @@ def build_datacard(manifest: BuildManifest, repo: str) -> str:
         f"- **Version** : {manifest.version}",
         f"- **Généré le** : {manifest.created_at}",
         f"- **Sources** : {len(sources)}",
-        "- **Split** : `train` uniquement — **aucun jeu de validation ou de test**",
     ]
+    if evaluation and evaluation.total_samples:
+        lines.append(
+            f"- **Splits** : `train` ({manifest.total_samples:,}) · "
+            f"`test` ({evaluation.total_samples:,}, benchmarks tenus à l'écart)"
+        )
+    else:
+        lines.append("- **Split** : `train` uniquement — **aucun jeu de test**")
     if manifest.partial:
         lines.append(f"- ⚠️ **Build partiel** : {manifest.stop_reason}")
     lines += _tasks_section(manifest, total)
@@ -232,7 +255,8 @@ def _format_section() -> list[str]:
         "",
         "```python",
         "from datasets import load_dataset",
-        f'ds = load_dataset("{get_settings().hf.repo}", split="train")',
+        f'train = load_dataset("{get_settings().hf.repo}", split="train")',
+        f'test = load_dataset("{get_settings().hf.repo}", split="test")   # benchmarks',
         "```",
     ]
 
@@ -267,22 +291,28 @@ def _limits_section(manifest: BuildManifest, stats: dict, total: int) -> list[st
             "",
         ]
 
-    lines += [
-        "**Pas de jeu d'évaluation.** L'intégralité des exemples est dans `train`.",
-        "Aucune décontamination n'a été appliquée : plusieurs sources sont déjà",
-        "présentes dans le corpus de pré-entraînement du projet. Toute métrique",
-        "calculée sur ce dataset serait optimiste — construire un jeu de test",
-        "**wolof natif et indépendant** avant d'évaluer.",
-        "",
-    ]
-
-    if versed := [e.dataset_id for e in manifest.entries if e.n_samples and e.split != "train"]:
+    evaluation = _eval_manifest()
+    if evaluation and evaluation.total_samples:
+        benchmarks = ", ".join(f"`{e.dataset_id}`" for e in evaluation.entries if e.n_samples)
         lines += [
-            "**Des jeux d'évaluation ont été versés dans `train`.** "
-            + ", ".join(f"`{d}`" for d in versed)
-            + " n'ont pas de split d'entraînement : leurs splits `test`/`validation`",
-            "ont été intégrés pour le volume. Ne pas s'en servir pour mesurer un",
-            "modèle entraîné sur ce dataset — le résultat serait mécaniquement bon.",
+            f"**Le split `test` reste optimiste.** Il réunit {benchmarks} "
+            f"({evaluation.total_samples:,} exemples), tenus hors du `train` et vérifiés",
+            "sans recouvrement. Mais les phrases sources de plusieurs de ces benchmarks",
+            "figurent déjà, en texte brut, dans le corpus de pré-entraînement du projet :",
+            "un modèle les a donc pu voir **avant** le SFT. Un score honnête demande un",
+            "jeu de test **wolof natif**, écrit pour l'occasion et jamais publié.",
+            "",
+            "**Pas de split `validation`.** À découper dans `train` (~2 %, stratifié par",
+            "tâche et par source) pour régler les hyperparamètres.",
+            "",
+        ]
+    else:
+        lines += [
+            "**Pas de jeu d'évaluation.** L'intégralité des exemples est dans `train`.",
+            "Aucune décontamination n'a été appliquée : plusieurs sources sont déjà",
+            "présentes dans le corpus de pré-entraînement du projet. Toute métrique",
+            "calculée sur ce dataset serait optimiste — construire un jeu de test",
+            "**wolof natif et indépendant** avant d'évaluer.",
             "",
         ]
 
@@ -308,11 +338,14 @@ def publish(
     private: bool = True,
     dry_run: bool = True,
     card_only: bool = False,
+    eval_file: str | Path | None = None,
 ) -> str:
     """Publie le dataset SFT sur HF. ``dry_run`` par défaut (n'envoie rien).
 
     ``card_only`` n'envoie que la data card : utile quand seul le README change
-    et que les 550 Mo de ``train.jsonl`` sont déjà en ligne.
+    et que le gigaoctet de ``train.jsonl`` est déjà en ligne.
+
+    ``eval_file`` publie le split ``test`` (benchmarks) à côté du ``train``.
 
     Retourne l'URL du dataset (ou un message dry-run).
     """
@@ -359,8 +392,16 @@ def publish(
             repo_type="dataset",
             commit_message=f"SFT wolof v{manifest.version}",
         )
+        if eval_file is not None and Path(eval_file).exists():
+            api.upload_file(
+                path_or_fileobj=str(eval_file),
+                path_in_repo="data/test.jsonl",
+                repo_id=repo,
+                repo_type="dataset",
+                commit_message=f"jeu d'évaluation v{manifest.version}",
+            )
     else:
-        log.info("card-only : data/train.jsonl inchangé (non renvoyé)")
+        log.info("card-only : les fichiers de données restent inchangés")
     url = f"https://huggingface.co/datasets/{repo}"
     log.info("publié -> %s", url)
     return url

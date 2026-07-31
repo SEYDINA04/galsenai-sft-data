@@ -173,13 +173,27 @@ def build(
     max_rss_mb: float | None = typer.Option(
         None, help="plafond de mémoire du processus de build (Mo)"
     ),
+    plan: Path = typer.Option(None, "--plan", help="plan de build (défaut: configs/build.yaml)"),
+    split: str = typer.Option("train", "--split", help="nom du split produit (train | test | …)"),
+    exclude_from: Path = typer.Option(
+        None,
+        "--exclude-from",
+        help="JSONL déjà construit dont AUCUN exemple ne doit réapparaître (anti-fuite)",
+    ),
 ) -> None:
-    """Construit le dataset SFT complet (charge, convertit, valide, exporte).
+    """Construit le dataset SFT (charge, convertit, valide, exporte).
+
+    Par défaut : le jeu d'entraînement, depuis ``configs/build.yaml``. Pour le
+    jeu d'évaluation, tenu à l'écart du train :
+
+        galsenai-sft build --plan configs/eval.yaml --split test \
+            --exclude-from data/processed/chatml/all.jsonl
 
     Mémoire bornée : écriture au fil de l'eau + garde-fou. Pour un plafond
     **dur** (cgroup), préférer ``make build`` / ``scripts/build_guarded.sh``.
     """
     from galsenai_sft.build import build as run_build
+    from galsenai_sft.build import load_build_plan
     from galsenai_sft.core.config import get_settings
     from galsenai_sft.core.memory import MemoryGuard
     from galsenai_sft.loaders import HFLoader
@@ -191,15 +205,20 @@ def build(
         settings.memory.max_rss_mb = max_rss_mb
 
     manifest = run_build(
+        plan=load_build_plan(plan) if plan else None,
         version=version,
         limit=limit,
         decontaminate_corpus=decontaminate,
         settings=settings,
         loader=HFLoader(streaming=streaming, batch_size=settings.build.batch_size),
         guard=MemoryGuard.from_settings(settings.memory),
+        split_name=split,
+        exclude_from=exclude_from,
     )
     table = Table(
-        "tâche", "exemples", title=f"Build v{version} — {manifest.total_samples:,} exemples"
+        "tâche",
+        "exemples",
+        title=f"Build v{version} [{split}] — {manifest.total_samples:,} exemples",
     )
     for task, n in manifest.by_task.items():
         table.add_row(task, f"{n:,}")
@@ -264,7 +283,15 @@ def publish(
     manifest = BuildManifest.model_validate(json.loads(manifest_path.read_text()))
     chatml_all = settings.paths.processed_chatml / "all.jsonl"
 
-    result = run_publish(manifest, chatml_all, repo=repo, dry_run=not execute, card_only=card_only)
+    eval_all = settings.paths.processed_chatml / "test" / "all.jsonl"
+    result = run_publish(
+        manifest,
+        chatml_all,
+        repo=repo,
+        dry_run=not execute,
+        card_only=card_only,
+        eval_file=eval_all if eval_all.exists() else None,
+    )
     console.print(result)
 
 

@@ -144,7 +144,8 @@ def test_absence_de_tool_call_signalee(card):
 
 
 def test_absence_de_split_signalee(card):
-    assert "aucun jeu de validation ou de test" in card
+    """Sans manifest de test, la carte doit dire que tout est dans `train`."""
+    assert "aucun jeu de test" in card
     assert "Pas de jeu d'évaluation" in card
     assert "décontamination" in card.lower()
 
@@ -209,27 +210,8 @@ def test_langues_declarees_suivent_les_statistiques(card):
     assert header.index("- wo") < header.index("- fr"), "le wolof reste la langue principale"
 
 
-def test_jeux_d_evaluation_verses_dans_train_sont_signales(tmp_path, monkeypatch):
-    from galsenai_sft.core.config import get_settings
-
-    monkeypatch.setattr(get_settings().paths, "interim", tmp_path)
-    m = BuildManifest(
-        version="0.2.0",
-        created_at="2026-07-31T01:04:09+00:00",
-        total_samples=100,
-        by_task={"qa": 100},
-        entries=[
-            BuildEntryReport(
-                dataset_id="facebook/belebele", task="qa", split="test", n_raw=100, n_samples=100
-            )
-        ],
-    )
-    card = build_datacard(m, "org/x")
-    assert "versés dans `train`" in card
-    assert "facebook/belebele" in card
-
-
 def test_pas_d_alerte_eval_quand_tout_vient_de_train(card):
+    """Les benchmarks vivent dans leur propre split : plus d'avertissement."""
     assert "versés dans `train`" not in card
 
 
@@ -238,3 +220,120 @@ def test_dedup_decrite_comme_globale_et_exacte(card):
     assert "globalement" in card
     assert "index partagé" in card
     assert "MinHash" in card
+
+
+# ════════════════════════════════════════════════════════════════════
+#  v0.3 : split `test` déclaré et décrit
+# ════════════════════════════════════════════════════════════════════
+def _write_eval_manifest(tmp_path, total=2250):
+    m = BuildManifest(
+        version="0.3.0",
+        created_at="2026-07-31T07:06:00+00:00",
+        total_samples=total,
+        by_task={"qa": total},
+        entries=[
+            BuildEntryReport(
+                dataset_id="facebook/belebele",
+                task="qa",
+                split="test",
+                n_raw=total,
+                n_samples=total,
+            )
+        ],
+    )
+    (tmp_path / "build_manifest_test.json").write_text(
+        m.model_dump_json(indent=2), encoding="utf-8"
+    )
+
+
+def test_entete_declare_les_deux_splits(manifest, tmp_path, monkeypatch):
+    from galsenai_sft.core.config import get_settings
+
+    monkeypatch.setattr(get_settings().paths, "interim", tmp_path)
+    (tmp_path / "build_stats.json").write_text(json.dumps(STATS), encoding="utf-8")
+    _write_eval_manifest(tmp_path)
+
+    card = build_datacard(manifest, "org/x")
+    header = card.split("---")[1]
+    assert "path: data/train.jsonl" in header
+    assert "path: data/test.jsonl" in header
+    assert "`test` (2,250" in card
+
+
+def test_limite_du_split_test_est_expliquee(manifest, tmp_path, monkeypatch):
+    """Un test set existe, mais il reste contaminé par le pré-entraînement."""
+    from galsenai_sft.core.config import get_settings
+
+    monkeypatch.setattr(get_settings().paths, "interim", tmp_path)
+    (tmp_path / "build_stats.json").write_text(json.dumps(STATS), encoding="utf-8")
+    _write_eval_manifest(tmp_path)
+
+    card = build_datacard(manifest, "org/x")
+    assert "reste optimiste" in card
+    assert "corpus de pré-entraînement" in card
+    assert "wolof natif" in card
+    assert "Pas de split `validation`" in card
+    # L'ancien avertissement n'a plus lieu d'être.
+    assert "versés dans `train`" not in card
+
+
+def test_sans_jeu_d_eval_la_carte_le_dit(card):
+    """Aucun manifest de test : la carte doit signaler l'absence, pas se taire."""
+    assert "Pas de jeu d'évaluation" in card
+    assert "aucun jeu de test" in card
+
+
+def test_publish_envoie_le_split_test(tmp_path, manifest, monkeypatch):
+    """Régression : le jeu d'évaluation doit partir avec le train, pas rester local."""
+    from galsenai_sft import publish as pub_mod
+    from galsenai_sft.core.config import get_settings
+
+    monkeypatch.setattr(get_settings().paths, "interim", tmp_path)
+    train = tmp_path / "train.jsonl"
+    train.write_text("{}\n", encoding="utf-8")
+    evalf = tmp_path / "test.jsonl"
+    evalf.write_text("{}\n", encoding="utf-8")
+
+    uploaded: list[str] = []
+
+    class FakeApi:
+        def __init__(self, token=None):
+            pass
+
+        def create_repo(self, *a, **k):
+            pass
+
+        def upload_file(self, path_in_repo, **k):
+            uploaded.append(path_in_repo)
+
+    monkeypatch.setattr("huggingface_hub.HfApi", FakeApi)
+    monkeypatch.setenv("HF_TOKEN", "factice")
+
+    pub_mod.publish(manifest, train, repo="org/x", dry_run=False, eval_file=evalf)
+    assert uploaded == ["README.md", "data/train.jsonl", "data/test.jsonl"]
+
+
+def test_publish_sans_eval_n_envoie_que_le_train(tmp_path, manifest, monkeypatch):
+    from galsenai_sft import publish as pub_mod
+    from galsenai_sft.core.config import get_settings
+
+    monkeypatch.setattr(get_settings().paths, "interim", tmp_path)
+    train = tmp_path / "train.jsonl"
+    train.write_text("{}\n", encoding="utf-8")
+    uploaded: list[str] = []
+
+    class FakeApi:
+        def __init__(self, token=None):
+            pass
+
+        def create_repo(self, *a, **k):
+            pass
+
+        def upload_file(self, path_in_repo, **k):
+            uploaded.append(path_in_repo)
+
+    monkeypatch.setattr("huggingface_hub.HfApi", FakeApi)
+    monkeypatch.setenv("HF_TOKEN", "factice")
+
+    pub_mod.publish(manifest, train, repo="org/x", dry_run=False, eval_file=None)
+    assert uploaded == ["README.md", "data/train.jsonl"]

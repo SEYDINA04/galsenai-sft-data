@@ -3,7 +3,7 @@
 > **But de ce fichier** : reprendre le travail rapidement. Lire ce fichier, puis
 > aller à la section **« PROCHAINE ÉTAPE »**.
 
-_Dernière mise à jour : 2026-07-31 (nuit) · Auteur : Babacar Ndao_
+_Dernière mise à jour : 2026-07-31 (matin) · Auteur : Babacar Ndao_
 _Dépôt : https://github.com/SEYDINA04/galsenai-sft-data (public, branche `main`)_
 
 ---
@@ -41,7 +41,7 @@ testée et poussée sur GitHub. Elle fait les 3 objectifs du brief :
    réel volontairement différé).
 
 **Les 7 lots (0 → 7) sont terminés**, plus un **lot 8 « mémoire »** après
-l'incident du 30/07. 135 tests passent. Le build a été vérifié sur données
+l'incident du 30/07. 139 tests passent. Le build a été vérifié sur données
 réelles.
 
 ---
@@ -235,26 +235,73 @@ dans `configs/build.yaml` (à 60 000 chacune, la traduction retomberait à
 ~150 000 et le dataset serait équilibré à ±3 % près entre les cinq tâches
 principales).
 
-### 4.6 Reste à faire
+### 4.6 ✅ v0.3 — un jeu de test séparé (31/07, matin)
 
-1. **Splits train/validation/test** — toujours absents ; c'est le seul point
-   qui empêche toute évaluation interprétable. Aggravé en v0.2 : `belebele`,
-   `afrimmlu`, `afrimgsm` et `afrixnli` étaient des **jeux d'évaluation** et
-   ont été versés dans `train` pour le volume. Il faut soit les en retirer,
-   soit construire un jeu de test wolof natif indépendant.
-2. **Retrieval** : capacité toujours à zéro. Aucune source ne l'apportera —
+Les quatre benchmarks versés dans `train` en v0.2 en ont été **retirés** et
+constituent désormais un split `test` publié à côté.
+
+| | v0.2 | v0.3 |
+|---|---:|---:|
+| `train` | 985 136 (dont 2 250 de benchmark) | **982 886** |
+| `test` | — | **2 250** |
+| Sources dans `train` | 30 | 26 |
+
+Le jeu de test réunit `facebook/belebele` (900), `masakhane/afrixnli` (600),
+`masakhane/afrimmlu` (500) et `masakhane/afrimgsm` (250).
+
+**Garantie anti-fuite, vérifiée.** Le build du jeu d'évaluation amorce son
+index de déduplication avec le contenu du `train` (`--exclude-from`) :
+un exemple d'entraînement ne peut pas y réapparaître. Contrôle effectué sur
+les 982 886 exemples du train : **0 intersection**.
+
+Nouveautés d'outillage :
+
+```bash
+# jeu d'entraînement (par défaut)
+make build
+
+# jeu d'évaluation, tenu à l'écart du train
+galsenai-sft build --plan configs/eval.yaml --split test \
+    --exclude-from data/processed/chatml/all.jsonl
+```
+
+- `configs/eval.yaml` : plan du jeu d'évaluation, séparé de `configs/build.yaml` ;
+- `build --plan / --split / --exclude-from` : un split autre que `train` écrit
+  dans son propre sous-répertoire (`data/processed/<format>/<split>/`) et son
+  propre manifest — un jeu d'évaluation ne peut pas écraser le train par oubli
+  d'une option ;
+- `publish` envoie les deux splits ; la data card les déclare dans
+  `configs:/data_files:` (le viewer HF les affiche séparément).
+
+**Ce qui n'est pas résolu.** Le corpus de pré-entraînement du projet contient
+déjà, en texte brut, les phrases sources de plusieurs de ces benchmarks. Un
+score sur ce split reste donc **optimiste** — c'est écrit dans la data card.
+La mesure propre demande un jeu de test **wolof natif**, écrit pour l'occasion
+et jamais publié : quelques centaines d'exemples suffisent, mais cela demande
+des locuteurs.
+
+### 4.7 Reste à faire
+
+1. **Jeu de test wolof natif** — le seul moyen d'obtenir un score honnête.
+   Demande des locuteurs : décision d'équipe.
+2. **Split `validation`** : à découper dans `train` (~2 %, stratifié par tâche
+   et par source). Contaminé lui aussi, mais sans importance — il sert à régler
+   des hyperparamètres, pas à annoncer un score.
+3. **Déséquilibre** : la traduction pèse 58,4 % du `train`. Levier
+   `max_samples` prêt dans `configs/build.yaml` (§4.5).
+4. **Retrieval** : capacité toujours à zéro. Aucune source ne l'apportera —
    passer par la synthèse sur le corpus de pré-entraînement (SWIM-IR).
-3. **Intent** : plafond mondial atteint (~15 000). Seule voie : localiser
+5. **Intent** : plafond mondial atteint (~15 000). Seule voie : localiser
    MASSIVE (protocole INJONGO) — production de données, pas sourcing.
-4. **`Salesforce/xlam-function-calling-60k`** : dépôt *gated*, accepter les
+6. **`Salesforce/xlam-function-calling-60k`** : dépôt *gated*, accepter les
    conditions à la main puis relancer (+60 000 appels exécutés-vérifiés).
-5. **Durcissement machine (demande `sudo`)** :
+7. **Durcissement machine (demande `sudo`)** :
    ```bash
    sudo apt install earlyoom && sudo systemctl enable --now earlyoom
    ```
    `systemd-oomd` ne surveille pas les processus lancés depuis un terminal —
    c'est pourquoi rien n'a tué le build avant le gel du 30/07.
-6. **Étape 3 (traduction externe)** : choisir un moteur + budget, puis brancher
+8. **Étape 3 (traduction externe)** : choisir un moteur + budget, puis brancher
    un backend `Translator`.
 
 ---
@@ -264,10 +311,12 @@ principales).
 ```bash
 cd galsenai-sft-data
 make setup                    # venv + install
-make test                     # 135 tests
+make test                     # 139 tests
 make doctor                   # état mémoire avant un gros build
 make build-smoke              # build de test (100 lignes/dataset, plafond 4 Go)
 make build                    # build complet SOUS PLAFOND MÉMOIRE  ← à utiliser
+uv run galsenai-sft build --plan configs/eval.yaml --split test \
+     --exclude-from data/processed/chatml/all.jsonl   # jeu d'ÉVALUATION
 uv run galsenai-sft converters        # datasets disponibles
 uv run galsenai-sft publish           # dry-run (data card)
 uv run galsenai-sft publish --execute # publier sur HF (supervisé)
@@ -287,7 +336,8 @@ build : `uv run galsenai-sft build` fonctionne aussi mais sans plafond cgroup.
 | **Volume disponible par tâche** | `docs/inventory.md` (`galsenai-sft inventory`) |
 | **Mémoire (protections)** | `docs/architecture.md` |
 | Garde-fou mémoire | `src/galsenai_sft/core/memory.py` |
-| Plan de build | `configs/build.yaml` |
+| Plan de build (train) | `configs/build.yaml` |
+| **Plan du jeu d'évaluation** | `configs/eval.yaml` |
 | Registre licences | `metadata/datasets_registry.yaml` |
 | Catalogue | `docs/dataset_catalog.md` |
 | Architecture / flux | `docs/architecture.md`, `docs/data_flow.md` |

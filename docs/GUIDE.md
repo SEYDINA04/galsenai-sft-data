@@ -71,7 +71,7 @@ La liste complète (avec licences) est dans `docs/dataset_catalog.md`. Le
 
 ---
 
-## 5. Comment on l'utilise (4 commandes)
+## 5. Comment on l'utilise (5 commandes)
 
 ```bash
 # 1. Voir combien de données existent, par tâche, avant de rien télécharger
@@ -83,7 +83,11 @@ galsenai-sft converters
 # 3. Construire le dataset SFT complet (sous plafond mémoire : voir §6 bis)
 make build
 
-# 4. Le préparer pour HuggingFace (test d'abord, puis réel)
+# 4. Construire le jeu d'ÉVALUATION (benchmarks, tenus hors du train)
+galsenai-sft build --plan configs/eval.yaml --split test \
+    --exclude-from data/processed/chatml/all.jsonl
+
+# 5. Le préparer pour HuggingFace (test d'abord, puis réel)
 galsenai-sft publish              # aperçu (ne publie rien)
 galsenai-sft publish --execute    # publie vraiment (supervisé)
 ```
@@ -140,7 +144,7 @@ prendre ensemble.
 
 - **Ajouter un nouveau dataset = écrire ~15 lignes** (un « converter »), sans
   rien casser d'autre (principe Open/Closed).
-- **Tout est testé** (135 tests automatiques) et vérifié à chaque modification (CI).
+- **Tout est testé** (139 tests automatiques) et vérifié à chaque modification (CI).
 - **Reproductible** : chaque build produit un « manifest » avec des empreintes
   (checksums) — on peut refaire exactement le même dataset plus tard.
 - **Documenté** : architecture, flux de données, guide de contribution.

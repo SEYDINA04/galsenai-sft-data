@@ -53,7 +53,8 @@ outil, que le transfert multilingue propage. Ils sont étiquetés
 `prompt_lang=en` et ne sont jamais comptés comme de la donnée wolof.
 
 Le critère 2 explique un point qui surprend à la lecture du dépôt : la liste des
-converters, celle du registre et celle du plan de build sont **identiques** (30).
+converters (30) et celle des plans de build sont **cohérentes** : 26 au
+`train` (`configs/build.yaml`), 4 au `test` (`configs/eval.yaml`).
 Ce n'est pas un défaut de conception mais la conséquence du critère — écrire un
 converter *est* l'acte d'inclusion. Le ciblage réel se lit donc dans ce que le
 dépôt **n'a pas** intégré, d'où `metadata/candidates.yaml`.
@@ -65,7 +66,7 @@ dépôt **n'a pas** intégré, d'où `metadata/candidates.yaml`.
 
 ---
 
-## 3. Ce qui est intégré (30 sources)
+## 3. Ce qui est intégré (26 sources au `train`, 4 au `test`)
 
 Volumes de **lignes source** mesurés par `galsenai-sft inventory` ; le détail
 par licence est dans [`dataset_catalog.md`](dataset_catalog.md).
@@ -74,11 +75,11 @@ par licence est dans [`dataset_catalog.md`](dataset_catalog.md).
 |---|---:|---:|---|
 | translation | 9 | 305 366 | capacité pivot fr/en ↔ wo ; corpus partiellement recouvrants |
 | tool_use | 5 | 324 479 | **function calling réel** (Toucan, Hermes, ToolACE, When2Call) + Q/R de code |
-| classification | 4 | 642 521 | sentiment, émotion, thématique, inférence (NLI) — **plafonné au build** |
+| classification | 3 | 641 921 | sentiment, émotion, thématique — **plafonné au build** |
 | instruction | 4 | 116 304 | instructions wolof (WORI natif, Alpaca traduit, Aya) |
 | intent | 2 | 14 072 | ancre wolof gold + domaine bancaire |
 | ner | 2 | 5 638 | MasakhaNER 2.0 (gold) + entity linking |
-| qa | 4 | 2 153 | QA ouvert, compréhension de lecture, QCM, maths |
+| qa | 1 | 503 | QA ouvert (les benchmarks sont dans le split `test`) |
 | retrieval | 0 | 0 | **capacité absente** |
 
 ---
@@ -132,7 +133,7 @@ d'ingénierie. Volumes atteignables en intégrant **tout** le wolof existant :
 | instruction | 60 644 | ~120 000 | ×5 sous la cible |
 | intent | 15 012 | ~15 000 | **plafond atteint** |
 | ner | 5 638 | ~6 500 | **plafond atteint** — ×100 sous la cible |
-| qa | 2 152 | ~3 000 | **plafond atteint** — ×200 sous la cible |
+| qa | 502 (+2 250 au `test`) | ~3 000 | **plafond atteint** — ×200 sous la cible |
 | retrieval | 0 | 0 | inexistant |
 
 Pour NER, QA, intent et retrieval, **aucune recherche de sources ne comblera
@@ -152,9 +153,14 @@ les tâches par le haut est impossible, on les rapproche donc aussi par le bas.
 ```bash
 galsenai-sft inventory   # mesure les volumes à la source (aucun téléchargement)
 galsenai-sft catalog     # régénère docs/dataset_catalog.md avec ces volumes
+
+# jeu d'entraînement / jeu d'évaluation
+make build
+galsenai-sft build --plan configs/eval.yaml --split test \
+    --exclude-from data/processed/chatml/all.jsonl
 ```
 
 Pour modifier le périmètre : ajouter/retirer une ligne dans
-`configs/build.yaml` (inclusion) ou dans `metadata/candidates.yaml`
-(exclusion motivée). Toute exclusion doit porter un motif — un test le
+`configs/build.yaml` (entraînement), `configs/eval.yaml` (évaluation) ou
+`metadata/candidates.yaml` (exclusion motivée). Toute exclusion doit porter un motif — un test le
 vérifie (`tests/test_inventory.py`).
